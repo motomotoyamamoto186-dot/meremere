@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>ペタンク・メレ大会運営システム</title>
+  <title>めれメレ｜ペタンク・メレ大会運営システム</title>
+  <meta name="description" content="めれメレ（メレメレ）は、ペタンクのメレ・スーパーメレ大会の組み合わせ自動抽選、50分/45分ホイッスルタイマー、BHS・ポイント順位集計ができる無料Webアプリです。" />
+  <meta name="keywords" content="めれメレ,メレメレ,ペタンク,メレ,スーパーメレ,大会運営,組み合わせ,抽選,BHS,ソルコフ" />
+  <meta property="og:title" content="めれメレ｜ペタンク・メレ大会運営システム" />
+  <meta property="og:description" content="ペタンク個人戦（メレ形式）の自動抽選・タイマー・QR共有・順位集計アプリ「めれメレ」" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
@@ -23,7 +27,7 @@
   <div id="viewer-banner" class="hidden bg-teal-800 text-white px-4 py-3 shadow-md">
     <div class="max-w-4xl mx-auto flex flex-wrap items-center justify-between gap-2">
       <div>
-        <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2 py-0.5 rounded mr-2">選手用 閲覧モード</span>
+        <span class="bg-amber-400 text-slate-900 text-xs font-bold px-2 py-0.5 rounded mr-2">めれメレ 選手閲覧モード</span>
         <span id="viewer-tournament-name" class="font-bold text-sm md:text-base">ペタンク・メレ大会</span>
       </div>
       <div class="flex items-center gap-2">
@@ -40,10 +44,10 @@
     <div class="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap items-center justify-between gap-3">
       <div>
         <div class="flex items-center gap-2">
-          <span class="bg-white/20 text-white text-xs font-bold px-2 py-0.5 rounded">PÉTANQUE MÊLÉE</span>
+          <span class="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded">めれメレ</span>
           <span id="header-rule-badge" class="text-xs text-teal-100 font-medium">11点先取 ／ 50分制</span>
         </div>
-        <h1 id="header-title" class="text-lg md:text-2xl font-black tracking-tight mt-0.5">ペタンク・メレ大会運営システム</h1>
+        <h1 id="header-title" class="text-lg md:text-2xl font-black tracking-tight mt-0.5">めれメレ - ペタンク・メレ大会運営システム</h1>
       </div>
       <div class="flex items-center gap-2">
         <button onclick="openQrModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs md:text-sm px-3 py-2 rounded-lg shadow flex items-center gap-1.5 transition">
@@ -74,8 +78,8 @@
       <div class="bg-white rounded-2xl p-5 md:p-8 shadow-sm border border-slate-200">
         <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
           <div>
-            <span class="text-teal-700 font-bold text-xs uppercase tracking-wider">Quick Start Guide</span>
-            <h2 class="text-xl md:text-2xl font-black text-slate-800 mt-1">大会運営のかんたん4ステップ</h2>
+            <span class="text-teal-700 font-bold text-xs uppercase tracking-wider">めれメレ Quick Start Guide</span>
+            <h2 class="text-xl md:text-2xl font-black text-slate-800 mt-1">めれメレ（ペタンク大会運営）のかんたん4ステップ</h2>
             <p class="text-sm text-slate-500 mt-1">個人参加・毎試合メンバー替え（メレ／スーパーメレ形式）の抽選・時間管理・順位集計をすべて自動で行います。</p>
           </div>
           <button onclick="switchTab('setup')" class="bg-teal-700 hover:bg-teal-600 text-white font-bold px-6 py-3 rounded-xl shadow-md transition text-sm md:text-base">
@@ -371,7 +375,7 @@
       <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
-            <span class="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-0.5 rounded">個人成績ランキング</span>
+            <span class="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-0.5 rounded">めれメレ 個人成績ランキング</span>
             <h2 id="standings-title" class="text-xl font-black text-slate-800 mt-1">個人順位表</h2>
             <p id="standings-rule-desc" class="text-xs text-slate-500 mt-0.5"></p>
           </div>
@@ -429,7 +433,7 @@
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <span class="text-xs font-bold text-teal-700">選手スマホ共有用 QRコード</span>
+          <span class="text-xs font-bold text-teal-700">めれメレ 選手スマホ共有用 QRコード</span>
           <h3 id="qr-modal-title" class="text-lg font-black text-slate-800">大会対戦表・順位表</h3>
         </div>
         <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none">&times;</button>
@@ -643,7 +647,7 @@
       state.ptDraw = parseFloat(document.getElementById('pt-draw').value) || 0;
       state.ptLoss = parseFloat(document.getElementById('pt-loss').value) || 0;
 
-      document.getElementById('header-title').textContent = state.tournamentName;
+      document.getElementById('header-title').textContent = `めれメレ - ${state.tournamentName}`;
       document.getElementById('header-rule-badge').textContent = `11点先取 ／ ${state.durationMin}分制 ／ 全${state.plannedRounds}回戦`;
       document.getElementById('custom-points-box').classList.toggle('hidden', state.rankingMode !== 'points');
       saveLocalState();
@@ -1258,7 +1262,7 @@
       const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-      a.download = `${state.tournamentName}_順位表.csv`;
+      a.download = `めれメレ_${state.tournamentName}_順位表.csv`;
       a.click();
     }
 
