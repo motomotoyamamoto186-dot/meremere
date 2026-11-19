@@ -545,7 +545,7 @@
     </div>
   </div>
 
-  <!-- ==================== 閲覧専用QRコード共有モーダル（超圧縮・高読み取り精度版） ==================== -->
+  <!-- ==================== 閲覧専用QRコード共有モーダル ==================== -->
   <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -558,8 +558,8 @@
       <div class="flex flex-col items-center justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
         <div id="qrcode-box" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"></div>
         <p id="qr-status-text" class="text-xs text-slate-600 text-center mt-3 leading-relaxed">
-          スマホのカメラで読み取ると<strong>閲覧専用ページ</strong>が開きます。<br/>
-          （※ラウンド進行や得点入力後は再度QRコードを表示して共有してください）
+          スマホのカメラで読み取ると<strong>最新のスコア・順位が入った閲覧専用ページ</strong>が開きます。<br/>
+          （※スコア入力後に閲覧者側の画面を更新したい場合は、<strong>新しいQRコードを再読み取り</strong>してください）
         </p>
       </div>
       <div class="flex gap-2">
@@ -643,7 +643,6 @@
     window.addEventListener('DOMContentLoaded', () => {
       buildCourtButtons();
 
-      // 超圧縮形式(#v=...) と 旧形式(#view=..., #share=...) の両方に対応
       if (window.location.hash) {
         if (window.location.hash.startsWith('#v=')) {
           try {
@@ -1170,8 +1169,11 @@
 
       document.getElementById('courts-container').innerHTML = round.courts.map((c, cIdx) => {
         const is2x3 = c.type === '2×3';
-        const redWin = c.scoreRed !== null && c.scoreBlue !== null && c.scoreRed > c.scoreBlue;
-        const blueWin = c.scoreRed !== null && c.scoreBlue !== null && c.scoreBlue > c.scoreRed;
+        const hasRed = c.scoreRed !== null && c.scoreRed !== undefined;
+        const hasBlue = c.scoreBlue !== null && c.scoreBlue !== undefined;
+        const hasBoth = hasRed && hasBlue;
+        const redWin = hasBoth && Number(c.scoreRed) > Number(c.scoreBlue);
+        const blueWin = hasBoth && Number(c.scoreBlue) > Number(c.scoreRed);
 
         const renderTeamSlots = (teamKey, ids) => ids.map((pid, sIdx) => {
           const isSwapTarget = !isViewerMode && swapMode && swapSelected && swapSelected.courtIdx === cIdx && swapSelected.team === teamKey && swapSelected.slotIdx === sIdx;
@@ -1182,24 +1184,30 @@
             </div>`;
         }).join('');
 
+        const viewerScoreText = (!hasRed && !hasBlue)
+          ? `<span class="text-xs font-bold text-slate-400">試合中（未入力）</span>`
+          : `<span class="font-black text-xl ${redWin ? 'text-rose-600' : 'text-slate-800'}">${hasRed ? c.scoreRed : '-'}</span>
+             <span class="font-bold text-slate-400">-</span>
+             <span class="font-black text-xl ${blueWin ? 'text-sky-600' : 'text-slate-800'}">${hasBlue ? c.scoreBlue : '-'}</span>`;
+
         const footerHtml = isViewerMode
           ? `<div class="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex items-center justify-center gap-3">
                <span class="text-xs font-bold text-slate-500">スコア</span>
-               <span class="font-black text-lg ${redWin ? 'text-rose-600' : 'text-slate-700'}">${c.scoreRed !== null ? c.scoreRed : '試合中'}</span>
-               <span class="font-bold text-slate-400">-</span>
-               <span class="font-black text-lg ${blueWin ? 'text-sky-600' : 'text-slate-700'}">${c.scoreBlue !== null ? c.scoreBlue : '試合中'}</span>
+               ${viewerScoreText}
              </div>`
           : `<div class="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                <button onclick="setQuickWin(${cIdx}, 'red')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition">
                  赤 11点勝利
                </button>
                <div class="flex items-center gap-1.5">
-                 <input type="number" min="0" max="11" value="${c.scoreRed !== null ? c.scoreRed : ''}" placeholder="-"
-                        onchange="updateScore(${cIdx}, 'red', this.value)"
+                 <input type="number" min="0" max="11" value="${hasRed ? c.scoreRed : ''}" placeholder="-"
+                        oninput="updateScore(${cIdx}, 'red', this.value, false)"
+                        onchange="updateScore(${cIdx}, 'red', this.value, true)"
                         class="w-12 text-center font-black text-base border border-slate-300 rounded-lg py-1 bg-white" />
                  <span class="font-bold text-slate-400">-</span>
-                 <input type="number" min="0" max="11" value="${c.scoreBlue !== null ? c.scoreBlue : ''}" placeholder="-"
-                        onchange="updateScore(${cIdx}, 'blue', this.value)"
+                 <input type="number" min="0" max="11" value="${hasBlue ? c.scoreBlue : ''}" placeholder="-"
+                        oninput="updateScore(${cIdx}, 'blue', this.value, false)"
+                        onchange="updateScore(${cIdx}, 'blue', this.value, true)"
                         class="w-12 text-center font-black text-base border border-slate-300 rounded-lg py-1 bg-white" />
                </div>
                <button onclick="setQuickWin(${cIdx}, 'blue')" class="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition">
@@ -1248,12 +1256,16 @@
       renderMatches(); renderStandings(); saveLocalState();
     }
 
-    function updateScore(courtIdx, side, val) {
+    function updateScore(courtIdx, side, val, shouldRerender) {
       if (isViewerMode) return;
       const c = state.rounds[state.currentRoundIndex].courts[courtIdx];
-      const num = val === '' ? null : Math.max(0, Math.min(11, parseInt(val, 10)));
-      if (side === 'red') c.scoreRed = num; else c.scoreBlue = num;
-      renderMatches(); renderStandings(); saveLocalState();
+      const trimmed = String(val).trim();
+      const num = trimmed === '' ? null : Math.max(0, Math.min(11, parseInt(trimmed, 10)));
+      if (side === 'red') c.scoreRed = Number.isNaN(num) ? null : num;
+      else c.scoreBlue = Number.isNaN(num) ? null : num;
+      saveLocalState();
+      renderStandings();
+      if (shouldRerender) renderMatches();
     }
 
     function toggleSwapMode() {
@@ -1290,7 +1302,7 @@
       state.rounds.forEach(r => {
         r.courts.forEach(c => {
           if (c.scoreRed === null || c.scoreBlue === null) return;
-          const rScore = c.scoreRed, bScore = c.scoreBlue;
+          const rScore = Number(c.scoreRed), bScore = Number(c.scoreBlue);
           const result = rScore > bScore ? 'red' : (bScore > rScore ? 'blue' : 'draw');
           const recordSide = (myIds, oppIds, myScore, oppScore, outcome) => {
             myIds.forEach(pid => {
@@ -1415,7 +1427,7 @@
       document.getElementById('player-detail-modal').classList.remove('hidden');
     }
 
-    // ==================== タイマー＆時間調整（+-ボタン） ====================
+    // ==================== タイマー＆時間調整 ====================
     function changeDuration(min) {
       state.durationMin = parseInt(min, 10);
       document.getElementById('match-duration').value = state.durationMin;
@@ -1498,7 +1510,7 @@
       } catch (e) {}
     }
 
-    // ==================== 超圧縮エンコーダ・デコーダ（QR読み取り精度を劇的改善） ====================
+    // ==================== 超圧縮エンコーダ・デコーダ ====================
     function encodeCompactState() {
       const idxMap = {};
       state.players.forEach((p, i) => { idxMap[p.id] = i; });
@@ -1519,8 +1531,8 @@
             c.type === '3×3' ? 0 : (c.type === '2×3' ? 1 : 2),
             c.red.map(id => idxMap[id] ?? 0),
             c.blue.map(id => idxMap[id] ?? 0),
-            c.scoreRed === null ? -1 : c.scoreRed,
-            c.scoreBlue === null ? -1 : c.scoreBlue
+            (c.scoreRed === null || c.scoreRed === undefined) ? -1 : Number(c.scoreRed),
+            (c.scoreBlue === null || c.scoreBlue === undefined) ? -1 : Number(c.scoreBlue)
           ])
         ])
       ];
@@ -1555,8 +1567,8 @@
           type: typeNames[c[0]] || '2×2',
           red: (c[1] || []).map(idx => 'vp_' + idx),
           blue: (c[2] || []).map(idx => 'vp_' + idx),
-          scoreRed: c[3] === -1 ? null : c[3],
-          scoreBlue: c[4] === -1 ? null : c[4]
+          scoreRed: (c[3] === -1 || c[3] === null || c[3] === undefined) ? null : Number(c[3]),
+          scoreBlue: (c[4] === -1 || c[4] === null || c[4] === undefined) ? null : Number(c[4])
         }))
       }));
       return st;
@@ -1584,9 +1596,8 @@
           colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.M
         });
-        statusEl.innerHTML = `スマホのカメラで読み取ると<strong>閲覧専用ページ</strong>が開きます。<br/>（※ラウンド進行や得点入力後は再度QRコードを表示して共有してください）`;
+        statusEl.innerHTML = `スマホのカメラで読み取ると<strong>最新のスコア・順位が入った閲覧専用ページ</strong>が開きます。<br/>（※スコア入力後に閲覧者側の画面を更新したい場合は、<strong>新しいQRコードを再読み取り</strong>してください）`;
       } catch (e) {
-        // 万が一人数が非常に多い場合は誤り訂正Lで再生成
         box.innerHTML = '';
         new QRCode(box, {
           text: shareUrl,
