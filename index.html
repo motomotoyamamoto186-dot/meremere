@@ -14,8 +14,17 @@
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
     body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
     .tab-active { border-bottom: 3px solid #0f766e; color: #0f766e; font-weight: 700; background-color: #f0fdfa; }
-    #qrcode-box { width: 196px; height: 196px; display: flex; align-items: center; justify-content: center; }
-    #qrcode-box img, #qrcode-box canvas {
+    #qrcode-box {
+      width: 196px;
+      height: 196px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #qrcode-box canvas {
+      display: none !important;
+    }
+    #qrcode-box img {
       width: 176px !important;
       height: 176px !important;
       margin: 0 auto !important;
@@ -799,7 +808,6 @@
           state.players = Array.isArray(state.players) ? state.players : [];
           state.rounds = Array.isArray(state.rounds) ? state.rounds : [];
 
-          // 新しい回戦が増えていたら最新回戦へ、そうでなければ現在の回戦を維持
           if (state.rounds.length > prevRoundCount && prevRoundCount > 0) {
             state.currentRoundIndex = state.rounds.length - 1;
           } else if (prevRoundIdx < state.rounds.length) {
