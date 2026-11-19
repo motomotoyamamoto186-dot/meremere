@@ -31,7 +31,7 @@
 </head>
 <body class="pb-24 md:pb-12">
 
-  <!-- ==================== 閲覧専用ページ用ヘッダー（改ざん防止・管理ボタンなし） ==================== -->
+  <!-- ==================== 閲覧専用ページ用ヘッダー ==================== -->
   <div id="viewer-header" class="hidden bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 text-white shadow-md no-print">
     <div class="max-w-5xl mx-auto px-4 py-3.5 space-y-2.5">
       <div class="flex flex-wrap items-center justify-between gap-2">
@@ -39,10 +39,18 @@
           <span class="bg-amber-400 text-slate-950 text-xs font-black px-2.5 py-0.5 rounded">めれメレ</span>
           <span class="bg-white/15 text-teal-100 text-[11px] font-bold px-2 py-0.5 rounded border border-white/20">選手・観客用 閲覧専用ページ</span>
         </div>
-        <span id="viewer-date-badge" class="text-xs text-slate-300 font-medium"></span>
+        <div class="flex items-center gap-2">
+          <span id="viewer-date-badge" class="text-xs text-slate-300 font-medium"></span>
+          <button onclick="refreshViewerFromCloud(true)" id="viewer-refresh-btn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow flex items-center gap-1 transition active:scale-95">
+            <span>🔄 最新情報に更新</span>
+          </button>
+        </div>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 id="viewer-tournament-name" class="text-lg md:text-2xl font-black tracking-tight">ペタンク・メレ大会</h1>
+        <div>
+          <h1 id="viewer-tournament-name" class="text-lg md:text-2xl font-black tracking-tight">ペタンク・メレ大会</h1>
+          <div id="viewer-sync-status" class="text-[11px] text-teal-200 mt-0.5">読み込み完了</div>
+        </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <label class="text-xs text-teal-200 font-bold whitespace-nowrap">🔍 自分の名前：</label>
           <select id="viewer-player-select" onchange="setViewerHighlight(this.value)" class="flex-1 sm:w-52 text-slate-900 text-sm rounded-lg px-2.5 py-1.5 font-bold bg-white shadow-sm">
@@ -82,7 +90,6 @@
       </div>
     </div>
 
-    <!-- PC用上部ナビゲーション（管理者用） -->
     <nav class="bg-white text-slate-600 border-b border-slate-200 hidden md:block">
       <div class="max-w-6xl mx-auto px-4 flex">
         <button onclick="switchTab('guide')" id="nav-guide" class="px-5 py-3 text-sm font-medium hover:text-teal-700 transition tab-active">📖 はじめに（大会作成）</button>
@@ -93,7 +100,6 @@
     </nav>
   </header>
 
-  <!-- メインコンテンツエリア -->
   <main class="max-w-6xl mx-auto px-3 md:px-4 pt-4 md:pt-6">
 
     <!-- ==================== TAB 0: 使い方ガイド＆大会作成スタート画面 ==================== -->
@@ -106,7 +112,7 @@
             </div>
             <h2 class="text-2xl md:text-3xl font-black tracking-tight">めれメレ で新しい大会を始める</h2>
             <p class="text-sm md:text-base text-teal-100 leading-relaxed">
-              開催日や大会名を設定して、参加者登録・自動抽選・ホイッスルタイマー・閲覧専用QR共有・最終順位PDF出力までこれ1つで完結します。
+              開催日や大会名を設定して、参加者登録・交流＆コート分散抽選・ホイッスルタイマー・閲覧専用QR共有・最終順位PDF出力までこれ1つで完結します。
             </p>
             <div id="active-tournament-notice" class="hidden pt-2">
               <div class="inline-flex flex-wrap items-center gap-2 bg-black/25 border border-white/20 rounded-xl px-3.5 py-2 text-xs">
@@ -143,20 +149,20 @@
           <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
             <div class="flex items-center gap-2.5 mb-1.5">
               <span class="w-7 h-7 rounded-full bg-teal-700 text-white font-black flex items-center justify-center text-xs">2</span>
-              <h4 class="font-bold text-slate-800 text-sm md:text-base">自動抽選＆コート配分（2×3変則対応）</h4>
+              <h4 class="font-bold text-slate-800 text-sm md:text-base">交流＆コート分散を考慮した自動抽選</h4>
             </div>
             <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              同じ人と連続で味方・対戦相手にならないよう自動計算してチームを作成。<strong>トリプルス（3×3）・変則（2×3）・ダブルス（2×2）</strong>を自動調整します。
+              <strong>同じ人となるべく組まない・当たらない</strong>ようにしつつ、<strong>一度使ったコートはなるべく避けて</strong>満遍なく割り振ります。
             </p>
           </div>
 
           <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
             <div class="flex items-center gap-2.5 mb-1.5">
               <span class="w-7 h-7 rounded-full bg-teal-700 text-white font-black flex items-center justify-center text-xs">3</span>
-              <h4 class="font-bold text-slate-800 text-sm md:text-base">ホイッスルタイマー＆閲覧専用QR共有</h4>
+              <h4 class="font-bold text-slate-800 text-sm md:text-base">QRは1回読むだけ！閲覧ページの「更新」ボタン</h4>
             </div>
             <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              タイマーの<strong>+1分/-1分/+10秒/-10秒</strong>ボタンで残り5分・終了ホイッスルの事前テストも可能。QR共有は<strong>閲覧専用ページ</strong>が開くため得点改ざんの心配がありません。
+              選手はQRコードを1回読み込むだけ。あとは閲覧者ページの<strong>「🔄 最新情報に更新」</strong>を押せば最新スコアや次の回戦がすぐ反映されます。
             </p>
           </div>
 
@@ -550,7 +556,7 @@
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div>
-          <span class="bg-amber-100 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded">🔒 閲覧専用（得点編集ロック済）</span>
+          <span class="bg-amber-100 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded">🔒 閲覧専用（QRは1回読むだけ）</span>
           <h3 id="qr-modal-title" class="text-lg font-black text-slate-800 mt-1">大会対戦表・順位表</h3>
         </div>
         <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none">&times;</button>
@@ -558,8 +564,8 @@
       <div class="flex flex-col items-center justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
         <div id="qrcode-box" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"></div>
         <p id="qr-status-text" class="text-xs text-slate-600 text-center mt-3 leading-relaxed">
-          スマホのカメラで読み取ると<strong>最新のスコア・順位が入った閲覧専用ページ</strong>が開きます。<br/>
-          （※スコア入力後に閲覧者側の画面を更新したい場合は、<strong>新しいQRコードを再読み取り</strong>してください）
+          最初に<strong>1回だけ</strong>スマホで読み取ってください。<br/>
+          あとは閲覧者ページの<strong>「🔄 最新情報に更新」</strong>ボタンを押すだけで最新スコア・次の回戦に更新されます！
         </p>
       </div>
       <div class="flex gap-2">
@@ -581,6 +587,9 @@
   </div>
 
   <script>
+    // Firebase Realtime Database 設定（mere-mere-petanque）
+    const FIREBASE_DB_URL = "https://mere-mere-petanque-default-rtdb.asia-southeast1.firebasedatabase.app";
+
     const ASSOCIATIONS = {
       0: { code: 0, name: '無所属', short: 'なし', color: 'bg-slate-100 text-slate-600 border-slate-300' },
       1: { code: 1, name: '札幌市', short: '1.札幌', color: 'bg-blue-100 text-blue-800 border-blue-300' },
@@ -612,8 +621,13 @@
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     }
 
+    function generateRoomId() {
+      return 't_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+    }
+
     function createDefaultState() {
       return {
+        roomId: generateRoomId(),
         tournamentName: 'ペタンク・メレ大会',
         tournamentDate: getTodayStr(),
         plannedRounds: 4,
@@ -634,25 +648,33 @@
     let swapSelected = null;
     let viewerHighlightId = '';
     let isViewerMode = false;
+    let activeViewerRoomId = '';
     let timerSeconds = 50 * 60;
     let timerInterval = null;
     let warningPlayed = false;
+    let cloudSyncTimer = null;
 
-    const STORAGE_KEY = 'meremere_admin_state_v5';
+    const STORAGE_KEY = 'meremere_admin_state_v6';
 
-    window.addEventListener('DOMContentLoaded', () => {
+    window.addEventListener('DOMContentLoaded', async () => {
       buildCourtButtons();
 
+      // 閲覧モード（#room=... または従来の #v= / #view=）判定
       if (window.location.hash) {
+        if (window.location.hash.startsWith('#room=')) {
+          activeViewerRoomId = window.location.hash.slice(6).trim();
+          isViewerMode = true;
+          applyViewerShell();
+          await refreshViewerFromCloud(false);
+          return;
+        }
         if (window.location.hash.startsWith('#v=')) {
           try {
             const payload = window.location.hash.slice(3);
             state = decodeCompactState(payload);
             enterViewerMode();
             return;
-          } catch (e) {
-            alert('共有データの読み込みに失敗しました。QRコードを再度読み取ってください。');
-          }
+          } catch (e) {}
         } else if (window.location.hash.startsWith('#view=') || window.location.hash.startsWith('#share=')) {
           try {
             const encoded = window.location.hash.replace(/^#(view|share)=/, '');
@@ -660,17 +682,17 @@
             state = { ...createDefaultState(), ...JSON.parse(jsonStr) };
             enterViewerMode();
             return;
-          } catch (e) {
-            alert('共有データの読み込みに失敗しました。QRコードを再度読み取ってください。');
-          }
+          } catch (e) {}
         }
       }
 
       loadLocalState();
+      if (!state.roomId) state.roomId = generateRoomId();
       syncConfigUI();
       renderPlayers();
       updateCourtPreview();
       updateActiveTournamentNotice();
+      syncStateToCloud();
 
       if (state.rounds.length > 0) {
         renderMatches();
@@ -684,6 +706,81 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         updateActiveTournamentNotice();
       } catch (e) {}
+      scheduleCloudSync();
+    }
+
+    function scheduleCloudSync() {
+      if (isViewerMode) return;
+      clearTimeout(cloudSyncTimer);
+      cloudSyncTimer = setTimeout(() => {
+        syncStateToCloud();
+      }, 250);
+    }
+
+    async function syncStateToCloud() {
+      if (isViewerMode || !FIREBASE_DB_URL || !state.roomId) return;
+      try {
+        await fetch(`${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(state.roomId)}.json`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            updatedAt: Date.now(),
+            data: state
+          })
+        });
+      } catch (e) {
+        console.warn('Firebase同期スキップ:', e);
+      }
+    }
+
+    function applyViewerShell() {
+      isViewerMode = true;
+      document.getElementById('admin-header').classList.add('hidden');
+      document.getElementById('admin-mobile-nav').classList.add('hidden');
+      document.getElementById('timer-card').classList.add('hidden');
+      document.getElementById('admin-round-controls').classList.add('hidden');
+      document.getElementById('finish-tournament-box').classList.add('hidden');
+      document.getElementById('tab-guide').classList.add('hidden');
+      document.getElementById('tab-setup').classList.add('hidden');
+      document.getElementById('viewer-header').classList.remove('hidden');
+    }
+
+    async function refreshViewerFromCloud(showFeedback) {
+      if (!activeViewerRoomId) return;
+      const btn = document.getElementById('viewer-refresh-btn');
+      const statusEl = document.getElementById('viewer-sync-status');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⏳ 更新中...</span>';
+      }
+
+      try {
+        const res = await fetch(`${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(activeViewerRoomId)}.json?t=${Date.now()}`, {
+          cache: 'no-store'
+        });
+        const payload = await res.json();
+        if (payload && payload.data) {
+          const prevRoundIdx = state.currentRoundIndex;
+          state = { ...createDefaultState(), ...payload.data };
+          if (prevRoundIdx < state.rounds.length) {
+            state.currentRoundIndex = prevRoundIdx;
+          }
+          enterViewerMode();
+          const now = new Date();
+          const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+          if (statusEl) statusEl.textContent = `✅ 最終更新: ${timeStr}`;
+        } else {
+          if (statusEl) statusEl.textContent = '⚠️ 大会データがまだ送信されていません（管理者画面で「閲覧用QR共有」を開いてください）';
+        }
+      } catch (e) {
+        if (statusEl) statusEl.textContent = '⚠️ 通信エラー：電波状況を確認してもう一度「最新情報に更新」を押してください';
+        if (showFeedback) alert('通信に失敗しました。電波状況を確認して再度お試しください。');
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '<span>🔄 最新情報に更新</span>';
+        }
+      }
     }
 
     function loadLocalState() {
@@ -763,6 +860,7 @@
       updateCourtPreview();
       updateActiveTournamentNotice();
       resetTimer();
+      syncStateToCloud();
       switchTab('guide');
     }
 
@@ -986,16 +1084,33 @@
       switchTab('matches');
     }
 
+    // ==================== 交流＆コート分散を考慮した自動抽選 ====================
     function generateNextRound() {
       const alloc = calculateCourtAllocation(state.players.length, state.courtCount);
       if (!alloc.valid) { alert(alloc.msg); return; }
 
-      const restCount = {}, partnerCount = {}, oppCount = {};
-      state.players.forEach(p => { restCount[p.id] = 0; partnerCount[p.id] = {}; oppCount[p.id] = {}; });
+      const restCount = {};
+      const partnerCount = {};
+      const oppCount = {};
+      const courtHistory = {}; // [playerId][courtNum] = 回数
+
+      state.players.forEach(p => {
+        restCount[p.id] = 0;
+        partnerCount[p.id] = {};
+        oppCount[p.id] = {};
+        courtHistory[p.id] = {};
+      });
 
       state.rounds.forEach(r => {
         r.resting.forEach(id => { if (restCount[id] !== undefined) restCount[id]++; });
         r.courts.forEach(c => {
+          const cNum = c.courtNum;
+          const allInCourt = [...c.red, ...c.blue];
+          allInCourt.forEach(pid => {
+            if (courtHistory[pid]) {
+              courtHistory[pid][cNum] = (courtHistory[pid][cNum] || 0) + 1;
+            }
+          });
           c.red.forEach(a => {
             c.red.forEach(b => { if (a !== b && partnerCount[a]) partnerCount[a][b] = (partnerCount[a][b] || 0) + 1; });
             c.blue.forEach(b => { if (oppCount[a]) oppCount[a][b] = (oppCount[a][b] || 0) + 1; });
@@ -1008,9 +1123,11 @@
       });
 
       const lastResting = state.rounds.length > 0 ? new Set(state.rounds[state.rounds.length - 1].resting) : new Set();
-      let bestConfig = null, bestPenalty = Infinity;
+      let bestConfig = null;
+      let bestPenalty = Infinity;
 
-      for (let attempt = 0; attempt < 60; attempt++) {
+      const attempts = 2500;
+      for (let attempt = 0; attempt < attempts; attempt++) {
         const sorted = [...state.players].sort((a, b) => {
           const ra = restCount[a.id] + (lastResting.has(a.id) ? 0.5 : 0);
           const rb = restCount[b.id] + (lastResting.has(b.id) ? 0.5 : 0);
@@ -1027,19 +1144,45 @@
           [active[i], active[j]] = [active[j], active[i]];
         }
 
-        let idx = 0, penalty = 0, courtNum = 1;
+        let idx = 0;
+        let penalty = 0;
+        let courtNum = 1;
         const courts = [];
+
         const buildCourt = (type, rSize, bSize) => {
+          const currentCourtNum = courtNum++;
           const red = active.slice(idx, idx + rSize).map(p => p.id); idx += rSize;
           const blue = active.slice(idx, idx + bSize).map(p => p.id); idx += bSize;
+
+          // 同じ味方・同じ対戦相手の重複ペナルティ（交流を最優先）
           red.forEach(a => {
-            red.forEach(b => { if (a !== b) penalty += (partnerCount[a][b] || 0) * 100; });
-            blue.forEach(b => { penalty += (oppCount[a][b] || 0) * 25; });
+            red.forEach(b => {
+              if (a !== b) {
+                const pCnt = partnerCount[a][b] || 0;
+                if (pCnt > 0) penalty += pCnt * pCnt * 220;
+              }
+            });
+            blue.forEach(b => {
+              const oCnt = oppCount[a][b] || 0;
+              if (oCnt > 0) penalty += oCnt * oCnt * 90;
+            });
           });
           blue.forEach(a => {
-            blue.forEach(b => { if (a !== b) penalty += (partnerCount[a][b] || 0) * 100; });
+            blue.forEach(b => {
+              if (a !== b) {
+                const pCnt = partnerCount[a][b] || 0;
+                if (pCnt > 0) penalty += pCnt * pCnt * 220;
+              }
+            });
           });
-          courts.push({ courtNum: courtNum++, type, red, blue, scoreRed: null, scoreBlue: null });
+
+          // 一度使ったコートの重複ペナルティ（フェアプレー・コート分散）
+          [...red, ...blue].forEach(pid => {
+            const cCnt = (courtHistory[pid] && courtHistory[pid][currentCourtNum]) || 0;
+            if (cCnt > 0) penalty += cCnt * cCnt * 140;
+          });
+
+          courts.push({ courtNum: currentCourtNum, type, red, blue, scoreRed: null, scoreBlue: null });
         };
 
         for (let i = 0; i < alloc.c33; i++) buildCourt('3×3', 3, 3);
@@ -1510,38 +1653,6 @@
       } catch (e) {}
     }
 
-    // ==================== 超圧縮エンコーダ・デコーダ ====================
-    function encodeCompactState() {
-      const idxMap = {};
-      state.players.forEach((p, i) => { idxMap[p.id] = i; });
-      const arr = [
-        state.tournamentName,
-        state.tournamentDate,
-        state.plannedRounds,
-        state.durationMin,
-        state.rankingMode === 'bhs' ? 0 : 1,
-        state.ptWin,
-        state.ptDraw,
-        state.ptLoss,
-        state.currentRoundIndex,
-        state.players.map(p => [p.name, p.assoc]),
-        state.rounds.map(r => [
-          r.resting.map(id => idxMap[id] ?? 0),
-          r.courts.map(c => [
-            c.type === '3×3' ? 0 : (c.type === '2×3' ? 1 : 2),
-            c.red.map(id => idxMap[id] ?? 0),
-            c.blue.map(id => idxMap[id] ?? 0),
-            (c.scoreRed === null || c.scoreRed === undefined) ? -1 : Number(c.scoreRed),
-            (c.scoreBlue === null || c.scoreBlue === undefined) ? -1 : Number(c.scoreBlue)
-          ])
-        ])
-      ];
-      const jsonStr = JSON.stringify(arr);
-      const b64 = btoa(unescape(encodeURIComponent(jsonStr)))
-        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-      return b64;
-    }
-
     function decodeCompactState(b64url) {
       let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
       while (b64.length % 4) b64 += '=';
@@ -1575,39 +1686,25 @@
     }
 
     function buildShareUrl() {
-      const compactPayload = encodeCompactState();
-      return `${window.location.href.split('#')[0]}#v=${compactPayload}`;
+      return `${window.location.href.split('#')[0]}#room=${encodeURIComponent(state.roomId)}`;
     }
 
-    function openQrModal() {
+    async function openQrModal() {
       if (isViewerMode) return;
+      await syncStateToCloud();
       document.getElementById('qr-modal-title').textContent = state.tournamentName;
       const box = document.getElementById('qrcode-box');
-      const statusEl = document.getElementById('qr-status-text');
       box.innerHTML = '';
 
       const shareUrl = buildShareUrl();
-      try {
-        new QRCode(box, {
-          text: shareUrl,
-          width: 260,
-          height: 260,
-          colorDark: '#0f172a',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M
-        });
-        statusEl.innerHTML = `スマホのカメラで読み取ると<strong>最新のスコア・順位が入った閲覧専用ページ</strong>が開きます。<br/>（※スコア入力後に閲覧者側の画面を更新したい場合は、<strong>新しいQRコードを再読み取り</strong>してください）`;
-      } catch (e) {
-        box.innerHTML = '';
-        new QRCode(box, {
-          text: shareUrl,
-          width: 270,
-          height: 270,
-          colorDark: '#0f172a',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.L
-        });
-      }
+      new QRCode(box, {
+        text: shareUrl,
+        width: 240,
+        height: 240,
+        colorDark: '#0f172a',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
       document.getElementById('qr-modal').classList.remove('hidden');
     }
 
@@ -1615,23 +1712,18 @@
     function copyShareUrl() { navigator.clipboard.writeText(buildShareUrl()).then(() => alert('閲覧専用URLをコピーしました！')); }
 
     function enterViewerMode() {
-      isViewerMode = true;
-      document.getElementById('admin-header').classList.add('hidden');
-      document.getElementById('admin-mobile-nav').classList.add('hidden');
-      document.getElementById('timer-card').classList.add('hidden');
-      document.getElementById('admin-round-controls').classList.add('hidden');
-      document.getElementById('finish-tournament-box').classList.add('hidden');
-      document.getElementById('tab-guide').classList.add('hidden');
-      document.getElementById('tab-setup').classList.add('hidden');
-
-      document.getElementById('viewer-header').classList.remove('hidden');
+      applyViewerShell();
       document.getElementById('viewer-tournament-name').textContent = state.tournamentName;
       document.getElementById('viewer-date-badge').textContent = `開催日: ${state.tournamentDate || ''} ／ 出場: ${state.players.length}名`;
-      document.getElementById('viewer-player-select').innerHTML =
+      const selectEl = document.getElementById('viewer-player-select');
+      const prevHighlight = viewerHighlightId;
+      selectEl.innerHTML =
         `<option value="">ハイライト表示を選択...</option>` +
         state.players.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+      if (prevHighlight) selectEl.value = prevHighlight;
 
-      switchViewerTab('matches');
+      const standingsVisible = !document.getElementById('tab-standings').classList.contains('hidden');
+      switchViewerTab(standingsVisible ? 'standings' : 'matches');
     }
 
     function switchViewerTab(tabName) {
