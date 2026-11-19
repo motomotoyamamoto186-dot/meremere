@@ -14,7 +14,13 @@
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
     body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
     .tab-active { border-bottom: 3px solid #0f766e; color: #0f766e; font-weight: 700; background-color: #f0fdfa; }
-    #qrcode-box img, #qrcode-box canvas { margin: 0 auto; display: block; max-width: 100%; height: auto; }
+    #qrcode-box { width: 196px; height: 196px; display: flex; align-items: center; justify-content: center; }
+    #qrcode-box img, #qrcode-box canvas {
+      width: 176px !important;
+      height: 176px !important;
+      margin: 0 auto !important;
+      display: block !important;
+    }
 
     /* PDF保存・印刷専用スタイル */
     @media print {
@@ -39,17 +45,20 @@
           <span class="bg-amber-400 text-slate-950 text-xs font-black px-2.5 py-0.5 rounded">めれメレ</span>
           <span class="bg-white/15 text-teal-100 text-[11px] font-bold px-2 py-0.5 rounded border border-white/20">選手・観客用 閲覧専用ページ</span>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <span id="viewer-date-badge" class="text-xs text-slate-300 font-medium"></span>
-          <button onclick="refreshViewerFromCloud(true)" id="viewer-refresh-btn" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs px-3 py-1.5 rounded-lg shadow flex items-center gap-1 transition active:scale-95">
+          <button onclick="refreshViewerFromCloud(true)" id="viewer-refresh-btn" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-lg shadow flex items-center gap-1 transition active:scale-95">
             <span>🔄 最新情報に更新</span>
+          </button>
+          <button onclick="toggleViewerAutoRefresh()" id="viewer-auto-btn" class="bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/20 transition">
+            自動更新: OFF
           </button>
         </div>
       </div>
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 id="viewer-tournament-name" class="text-lg md:text-2xl font-black tracking-tight">ペタンク・メレ大会</h1>
-          <div id="viewer-sync-status" class="text-[11px] text-teal-200 mt-0.5">読み込み完了</div>
+          <div id="viewer-sync-status" class="text-[11px] text-teal-200 mt-0.5">読み込み中...</div>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <label class="text-xs text-teal-200 font-bold whitespace-nowrap">🔍 自分の名前：</label>
@@ -553,17 +562,17 @@
 
   <!-- ==================== 閲覧専用QRコード共有モーダル ==================== -->
   <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
         <div>
           <span class="bg-amber-100 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded">🔒 閲覧専用（QRは1回読むだけ）</span>
-          <h3 id="qr-modal-title" class="text-lg font-black text-slate-800 mt-1">大会対戦表・順位表</h3>
+          <h3 id="qr-modal-title" class="text-base font-black text-slate-800 mt-1">大会対戦表・順位表</h3>
         </div>
         <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none">&times;</button>
       </div>
-      <div class="flex flex-col items-center justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <div id="qrcode-box" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"></div>
-        <p id="qr-status-text" class="text-xs text-slate-600 text-center mt-3 leading-relaxed">
+      <div class="flex flex-col items-center justify-center bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+        <div id="qrcode-box" class="bg-white p-2 rounded-xl shadow-sm border border-slate-200"></div>
+        <p id="qr-status-text" class="text-xs text-slate-600 text-center mt-2.5 leading-relaxed">
           最初に<strong>1回だけ</strong>スマホで読み取ってください。<br/>
           あとは閲覧者ページの<strong>「🔄 最新情報に更新」</strong>ボタンを押すだけで最新スコア・次の回戦に更新されます！
         </p>
@@ -649,30 +658,30 @@
     let viewerHighlightId = '';
     let isViewerMode = false;
     let activeViewerRoomId = '';
+    let viewerAutoTimer = null;
     let timerSeconds = 50 * 60;
     let timerInterval = null;
     let warningPlayed = false;
     let cloudSyncTimer = null;
 
-    const STORAGE_KEY = 'meremere_admin_state_v6';
+    const STORAGE_KEY = 'meremere_admin_state_v7';
 
     window.addEventListener('DOMContentLoaded', async () => {
       buildCourtButtons();
 
-      // 閲覧モード（#room=... または従来の #v= / #view=）判定
       if (window.location.hash) {
         if (window.location.hash.startsWith('#room=')) {
-          activeViewerRoomId = window.location.hash.slice(6).trim();
+          activeViewerRoomId = decodeURIComponent(window.location.hash.slice(6)).trim();
           isViewerMode = true;
           applyViewerShell();
-          await refreshViewerFromCloud(false);
+          await refreshViewerFromCloud(false, true);
           return;
         }
         if (window.location.hash.startsWith('#v=')) {
           try {
             const payload = window.location.hash.slice(3);
             state = decodeCompactState(payload);
-            enterViewerMode();
+            enterViewerMode('matches');
             return;
           } catch (e) {}
         } else if (window.location.hash.startsWith('#view=') || window.location.hash.startsWith('#share=')) {
@@ -680,7 +689,7 @@
             const encoded = window.location.hash.replace(/^#(view|share)=/, '');
             const jsonStr = decodeURIComponent(escape(atob(encoded)));
             state = { ...createDefaultState(), ...JSON.parse(jsonStr) };
-            enterViewerMode();
+            enterViewerMode('matches');
             return;
           } catch (e) {}
         }
@@ -714,22 +723,23 @@
       clearTimeout(cloudSyncTimer);
       cloudSyncTimer = setTimeout(() => {
         syncStateToCloud();
-      }, 250);
+      }, 150);
     }
 
     async function syncStateToCloud() {
       if (isViewerMode || !FIREBASE_DB_URL || !state.roomId) return;
       try {
+        const cleanState = JSON.parse(JSON.stringify(state));
         await fetch(`${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(state.roomId)}.json`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             updatedAt: Date.now(),
-            data: state
+            data: cleanState
           })
         });
       } catch (e) {
-        console.warn('Firebase同期スキップ:', e);
+        console.warn('Firebase同期エラー:', e);
       }
     }
 
@@ -745,7 +755,24 @@
       document.getElementById('viewer-header').classList.remove('hidden');
     }
 
-    async function refreshViewerFromCloud(showFeedback) {
+    function toggleViewerAutoRefresh() {
+      const btn = document.getElementById('viewer-auto-btn');
+      if (viewerAutoTimer) {
+        clearInterval(viewerAutoTimer);
+        viewerAutoTimer = null;
+        btn.textContent = '自動更新: OFF';
+        btn.className = 'bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/20 transition';
+      } else {
+        btn.textContent = '自動更新: ON (10秒)';
+        btn.className = 'bg-emerald-500 text-slate-950 font-black text-[11px] px-2.5 py-1.5 rounded-lg shadow transition';
+        refreshViewerFromCloud(false, false);
+        viewerAutoTimer = setInterval(() => {
+          refreshViewerFromCloud(false, false);
+        }, 10000);
+      }
+    }
+
+    async function refreshViewerFromCloud(showFeedback, isInitialLoad) {
       if (!activeViewerRoomId) return;
       const btn = document.getElementById('viewer-refresh-btn');
       const statusEl = document.getElementById('viewer-sync-status');
@@ -754,27 +781,45 @@
         btn.innerHTML = '<span>⏳ 更新中...</span>';
       }
 
+      const currentTab = !document.getElementById('tab-standings').classList.contains('hidden') ? 'standings' : 'matches';
+
       try {
-        const res = await fetch(`${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(activeViewerRoomId)}.json?t=${Date.now()}`, {
+        const url = `${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(activeViewerRoomId)}.json?nocache=${Date.now()}`;
+        const res = await fetch(url, {
+          method: 'GET',
           cache: 'no-store'
         });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         const payload = await res.json();
+
         if (payload && payload.data) {
           const prevRoundIdx = state.currentRoundIndex;
+          const prevRoundCount = state.rounds.length;
           state = { ...createDefaultState(), ...payload.data };
-          if (prevRoundIdx < state.rounds.length) {
+          state.players = Array.isArray(state.players) ? state.players : [];
+          state.rounds = Array.isArray(state.rounds) ? state.rounds : [];
+
+          // 新しい回戦が増えていたら最新回戦へ、そうでなければ現在の回戦を維持
+          if (state.rounds.length > prevRoundCount && prevRoundCount > 0) {
+            state.currentRoundIndex = state.rounds.length - 1;
+          } else if (prevRoundIdx < state.rounds.length) {
             state.currentRoundIndex = prevRoundIdx;
+          } else {
+            state.currentRoundIndex = Math.max(0, state.rounds.length - 1);
           }
-          enterViewerMode();
+
+          enterViewerMode(isInitialLoad ? 'matches' : currentTab);
           const now = new Date();
           const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-          if (statusEl) statusEl.textContent = `✅ 最終更新: ${timeStr}`;
+          if (statusEl) statusEl.textContent = `✅ 最新データ取得済み（${timeStr} 更新）`;
         } else {
-          if (statusEl) statusEl.textContent = '⚠️ 大会データがまだ送信されていません（管理者画面で「閲覧用QR共有」を開いてください）';
+          if (statusEl) statusEl.textContent = '⚠️ まだ大会データがありません（管理者が「閲覧用QR共有」を開くと送信されます）';
+          if (showFeedback) alert('まだ管理者からデータが送信されていません。管理者画面で「閲覧用QR共有」を一度開いてください。');
         }
       } catch (e) {
-        if (statusEl) statusEl.textContent = '⚠️ 通信エラー：電波状況を確認してもう一度「最新情報に更新」を押してください';
-        if (showFeedback) alert('通信に失敗しました。電波状況を確認して再度お試しください。');
+        console.error('更新エラー:', e);
+        if (statusEl) statusEl.textContent = '⚠️ 更新に失敗しました。電波状況を確認してもう一度「最新情報に更新」を押してください';
+        if (showFeedback) alert('最新情報の取得に失敗しました。電波状況を確認して再度押してください。');
       } finally {
         if (btn) {
           btn.disabled = false;
@@ -785,7 +830,7 @@
 
     function loadLocalState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('meremere_admin_state_v6');
         if (raw) {
           state = { ...createDefaultState(), ...JSON.parse(raw) };
           timerSeconds = state.durationMin * 60;
@@ -804,7 +849,6 @@
       }
     }
 
-    // ==================== 新規大会作成モーダル ====================
     function openCreateTournamentModal() {
       if (isViewerMode) return;
       document.getElementById('new-t-name').value = '';
@@ -846,7 +890,6 @@
       switchTab('setup');
     }
 
-    // ==================== 大会終了（最終ページの完全リセット） ====================
     function finishTournament() {
       if (isViewerMode) return;
       const msg = `「${state.tournamentName}」を終了して、すべての参加者・対戦結果を消去しますか？\n\n※PDFやCSVの保存が必要な場合は、先に保存してから終了してください。`;
@@ -864,7 +907,6 @@
       switchTab('guide');
     }
 
-    // ==================== ナビゲーション制御 ====================
     function switchTab(tabName) {
       if (isViewerMode) return;
       ['guide', 'setup', 'matches', 'standings'].forEach(t => {
@@ -1084,7 +1126,6 @@
       switchTab('matches');
     }
 
-    // ==================== 交流＆コート分散を考慮した自動抽選 ====================
     function generateNextRound() {
       const alloc = calculateCourtAllocation(state.players.length, state.courtCount);
       if (!alloc.valid) { alert(alloc.msg); return; }
@@ -1092,7 +1133,7 @@
       const restCount = {};
       const partnerCount = {};
       const oppCount = {};
-      const courtHistory = {}; // [playerId][courtNum] = 回数
+      const courtHistory = {};
 
       state.players.forEach(p => {
         restCount[p.id] = 0;
@@ -1154,7 +1195,6 @@
           const red = active.slice(idx, idx + rSize).map(p => p.id); idx += rSize;
           const blue = active.slice(idx, idx + bSize).map(p => p.id); idx += bSize;
 
-          // 同じ味方・同じ対戦相手の重複ペナルティ（交流を最優先）
           red.forEach(a => {
             red.forEach(b => {
               if (a !== b) {
@@ -1176,7 +1216,6 @@
             });
           });
 
-          // 一度使ったコートの重複ペナルティ（フェアプレー・コート分散）
           [...red, ...blue].forEach(pid => {
             const cCnt = (courtHistory[pid] && courtHistory[pid][currentCourtNum]) || 0;
             if (cCnt > 0) penalty += cCnt * cCnt * 140;
@@ -1570,7 +1609,6 @@
       document.getElementById('player-detail-modal').classList.remove('hidden');
     }
 
-    // ==================== タイマー＆時間調整 ====================
     function changeDuration(min) {
       state.durationMin = parseInt(min, 10);
       document.getElementById('match-duration').value = state.durationMin;
@@ -1699,8 +1737,8 @@
       const shareUrl = buildShareUrl();
       new QRCode(box, {
         text: shareUrl,
-        width: 240,
-        height: 240,
+        width: 176,
+        height: 176,
         colorDark: '#0f172a',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.M
@@ -1711,7 +1749,7 @@
     function closeQrModal() { document.getElementById('qr-modal').classList.add('hidden'); }
     function copyShareUrl() { navigator.clipboard.writeText(buildShareUrl()).then(() => alert('閲覧専用URLをコピーしました！')); }
 
-    function enterViewerMode() {
+    function enterViewerMode(targetTab) {
       applyViewerShell();
       document.getElementById('viewer-tournament-name').textContent = state.tournamentName;
       document.getElementById('viewer-date-badge').textContent = `開催日: ${state.tournamentDate || ''} ／ 出場: ${state.players.length}名`;
@@ -1722,8 +1760,7 @@
         state.players.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
       if (prevHighlight) selectEl.value = prevHighlight;
 
-      const standingsVisible = !document.getElementById('tab-standings').classList.contains('hidden');
-      switchViewerTab(standingsVisible ? 'standings' : 'matches');
+      switchViewerTab(targetTab || 'matches');
     }
 
     function switchViewerTab(tabName) {
