@@ -14,6 +14,7 @@
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
     body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
     .tab-active { border-bottom: 3px solid #0f766e; color: #0f766e; font-weight: 700; background-color: #f0fdfa; }
+    #qrcode-box img, #qrcode-box canvas { margin: 0 auto; display: block; max-width: 100%; height: auto; }
 
     /* PDF保存・印刷専用スタイル */
     @media print {
@@ -49,7 +50,6 @@
           </select>
         </div>
       </div>
-      <!-- 閲覧専用タブ（対戦表と順位表のみ） -->
       <div class="flex gap-2 pt-1">
         <button onclick="switchViewerTab('matches')" id="vtab-matches" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-black bg-amber-400 text-slate-950 shadow">
           🎯 対戦表を見る
@@ -98,7 +98,6 @@
 
     <!-- ==================== TAB 0: 使い方ガイド＆大会作成スタート画面 ==================== -->
     <section id="tab-guide" class="space-y-6">
-      <!-- 大会作成ヒーローカード -->
       <div class="bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-800 text-white rounded-2xl p-6 md:p-8 shadow-lg">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div class="space-y-2 max-w-2xl">
@@ -128,7 +127,6 @@
         </div>
       </div>
 
-      <!-- 4ステップ解説 -->
       <div class="bg-white rounded-2xl p-5 md:p-7 shadow-sm border border-slate-200">
         <h3 class="text-lg font-black text-slate-800 border-b border-slate-100 pb-3">運営の流れ（4ステップ）</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -138,7 +136,7 @@
               <h4 class="font-bold text-slate-800 text-sm md:text-base">「大会を作成する」から大会名・開催日を入力</h4>
             </div>
             <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              毎週日曜日の開催日（例：2026年12月6日）と大会名、ラウンド数、順位方式（<strong>BHS方式</strong> または <strong>ポイント制</strong>）を設定して参加者を登録します。
+              開催日と大会名、ラウンド数、順位方式（<strong>BHS方式</strong> または <strong>ポイント制</strong>）を設定して参加者を登録します。
             </p>
           </div>
 
@@ -179,7 +177,6 @@
     <section id="tab-setup" class="hidden space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <!-- 左カラム：大会ルール設定 -->
         <div class="lg:col-span-5 space-y-5">
           <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -219,7 +216,6 @@
               </div>
             </div>
 
-            <!-- 使用コート数ボタン -->
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1.5">使用コート数（トリプルス・ダブルス・2×3自動調整）</label>
               <div id="court-buttons" class="grid grid-cols-5 gap-1.5"></div>
@@ -228,7 +224,6 @@
               </div>
             </div>
 
-            <!-- 順位決定方式の選択 -->
             <div class="pt-2 border-t border-slate-100">
               <label class="block text-xs font-bold text-slate-600 mb-2">順位決定方式の選択</label>
               <div class="space-y-2">
@@ -249,7 +244,6 @@
                 </label>
               </div>
 
-              <!-- ポイント詳細設定 -->
               <div id="custom-points-box" class="hidden mt-3 bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2">
                 <div class="text-xs font-bold text-amber-900">ポイント配分設定（参加点は敗戦時のみ加点）</div>
                 <div class="grid grid-cols-3 gap-2">
@@ -270,7 +264,6 @@
             </div>
           </div>
 
-          <!-- 抽選開始アクションカード -->
           <div class="bg-gradient-to-br from-teal-700 to-emerald-800 text-white rounded-2xl p-5 shadow-md space-y-3">
             <div class="text-sm font-bold opacity-90">参加者の登録が終わったら</div>
             <button onclick="startFirstRound()" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-black py-3.5 px-4 rounded-xl shadow text-base transition flex items-center justify-center gap-2">
@@ -279,7 +272,6 @@
           </div>
         </div>
 
-        <!-- 右カラム：参加者＆協会登録 -->
         <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
             <div>
@@ -296,7 +288,6 @@
             </div>
           </div>
 
-          <!-- 1名追加フォーム -->
           <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
             <div class="flex flex-wrap gap-2">
               <input type="text" id="new-player-name" placeholder="選手名を入力（例：佐藤 健太）" onkeydown="if(event.key==='Enter') addSinglePlayer()" class="flex-1 min-w-[180px] border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 outline-none" />
@@ -338,7 +329,6 @@
             </details>
           </div>
 
-          <!-- 登録済み選手一覧 -->
           <div id="player-list-container" class="space-y-2 max-h-[520px] overflow-y-auto pr-1"></div>
         </div>
       </div>
@@ -347,7 +337,6 @@
     <!-- ==================== TAB 2: 対戦表・タイマー・得点 ==================== -->
     <section id="tab-matches" class="hidden space-y-5">
 
-      <!-- タイマーバー（管理者専用・+-時間調整付き） -->
       <div id="timer-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4 no-print">
         <div class="flex flex-wrap items-center gap-3">
           <div class="bg-slate-900 text-white px-4 py-2 rounded-xl text-center min-w-[135px]" id="timer-display-box">
@@ -356,7 +345,6 @@
           </div>
 
           <div class="space-y-2">
-            <!-- スタート・リセット・基準時間 -->
             <div class="flex flex-wrap items-center gap-1.5">
               <button onclick="toggleTimer()" id="timer-start-btn" class="bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs md:text-sm px-4 py-2 rounded-lg shadow-sm transition">
                 ▶ スタート
@@ -370,7 +358,6 @@
               </div>
             </div>
 
-            <!-- 時間調整 +- ボタン ＆ ホイッスル試聴 -->
             <div class="flex flex-wrap items-center gap-1">
               <span class="text-[11px] font-bold text-slate-500 mr-0.5">時間調整:</span>
               <button onclick="adjustTimer(-60)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] px-2 py-1 rounded border border-slate-300">-1分</button>
@@ -384,16 +371,13 @@
           </div>
         </div>
 
-        <!-- ラウンド切替タブ -->
         <div class="flex flex-wrap items-center gap-2">
           <div id="round-tabs" class="flex flex-wrap gap-1.5"></div>
         </div>
       </div>
 
-      <!-- ラウンド完了時の大型進行バナー -->
       <div id="round-complete-banner" class="hidden no-print"></div>
 
-      <!-- 現在のラウンド操作ヘッダー -->
       <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
         <div>
           <h2 id="current-round-heading" class="text-lg font-black text-slate-800">第1回戦 対戦表</h2>
@@ -409,10 +393,8 @@
         </div>
       </div>
 
-      <!-- 待機（休み）選手表示 -->
       <div id="resting-players-box" class="hidden bg-slate-100 border border-slate-300 rounded-xl p-3 text-sm"></div>
 
-      <!-- コート一覧グリッド -->
       <div id="courts-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 
     </section>
@@ -421,7 +403,6 @@
     <section id="tab-standings" class="hidden space-y-5">
       <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
 
-        <!-- PDF印刷時専用タイトルヘッダー（通常画面では非表示、PDF出力時に綺麗に表示） -->
         <div class="hidden print-only-header border-b-2 border-slate-800 pb-3 mb-4">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-600">めれメレ（ペタンク・メレ大会運営システム）公式記録</span>
@@ -430,7 +411,6 @@
           <h1 id="print-tournament-title" class="text-2xl font-black text-slate-900 mt-1">大会結果 個人順位表</h1>
         </div>
 
-        <!-- 画面用ヘッダー＆PDF保存・CSV・フィルタボタン -->
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 no-print">
           <div>
             <div class="flex flex-wrap items-center gap-2">
@@ -462,10 +442,8 @@
           </div>
         </div>
 
-        <!-- TOP3 表彰台カード -->
         <div id="podium-container" class="grid grid-cols-1 md:grid-cols-3 gap-3 my-5"></div>
 
-        <!-- 順位テーブル -->
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse text-sm">
             <thead id="standings-thead" class="bg-slate-100 text-slate-700 text-xs uppercase border-y border-slate-200"></thead>
@@ -473,7 +451,6 @@
           </table>
         </div>
 
-        <!-- 管理者専用：大会終了（データ破棄・リセット）セクション -->
         <div id="finish-tournament-box" class="mt-8 pt-6 border-t-2 border-dashed border-slate-200 no-print">
           <div class="bg-slate-50 border border-slate-300 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -568,7 +545,7 @@
     </div>
   </div>
 
-  <!-- ==================== 閲覧専用QRコード共有モーダル ==================== -->
+  <!-- ==================== 閲覧専用QRコード共有モーダル（超圧縮・高読み取り精度版） ==================== -->
   <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/75 z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -579,10 +556,10 @@
         <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none">&times;</button>
       </div>
       <div class="flex flex-col items-center justify-center bg-slate-50 p-4 rounded-xl border border-slate-200">
-        <div id="qrcode-box" class="bg-white p-3 rounded-lg shadow-sm"></div>
-        <p class="text-xs text-slate-600 text-center mt-3 leading-relaxed">
-          このQRコードとURLは<strong>選手・観客の閲覧専用ページ</strong>が開きます。<br/>
-          管理画面や得点入力ボタンは一切表示されないため安心して共有できます。
+        <div id="qrcode-box" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"></div>
+        <p id="qr-status-text" class="text-xs text-slate-600 text-center mt-3 leading-relaxed">
+          スマホのカメラで読み取ると<strong>閲覧専用ページ</strong>が開きます。<br/>
+          （※ラウンド進行や得点入力後は再度QRコードを表示して共有してください）
         </p>
       </div>
       <div class="flex gap-2">
@@ -666,16 +643,27 @@
     window.addEventListener('DOMContentLoaded', () => {
       buildCourtButtons();
 
-      // 閲覧専用URL（#view=... または旧 #share=...）で開かれた場合は完全に閲覧専用ページを起動
-      if (window.location.hash && (window.location.hash.startsWith('#view=') || window.location.hash.startsWith('#share='))) {
-        try {
-          const encoded = window.location.hash.replace(/^#(view|share)=/, '');
-          const jsonStr = decodeURIComponent(escape(atob(encoded)));
-          state = { ...createDefaultState(), ...JSON.parse(jsonStr) };
-          enterViewerMode();
-          return;
-        } catch (e) {
-          alert('共有データの読み込みに失敗しました。QRコードを再度読み取ってください。');
+      // 超圧縮形式(#v=...) と 旧形式(#view=..., #share=...) の両方に対応
+      if (window.location.hash) {
+        if (window.location.hash.startsWith('#v=')) {
+          try {
+            const payload = window.location.hash.slice(3);
+            state = decodeCompactState(payload);
+            enterViewerMode();
+            return;
+          } catch (e) {
+            alert('共有データの読み込みに失敗しました。QRコードを再度読み取ってください。');
+          }
+        } else if (window.location.hash.startsWith('#view=') || window.location.hash.startsWith('#share=')) {
+          try {
+            const encoded = window.location.hash.replace(/^#(view|share)=/, '');
+            const jsonStr = decodeURIComponent(escape(atob(encoded)));
+            state = { ...createDefaultState(), ...JSON.parse(jsonStr) };
+            enterViewerMode();
+            return;
+          } catch (e) {
+            alert('共有データの読み込みに失敗しました。QRコードを再度読み取ってください。');
+          }
         }
       }
 
@@ -1125,7 +1113,6 @@
         ? `閲覧専用モード ／ 制限時間 ${state.durationMin}分・11点先取制`
         : `全試合 11点先取 ／ 制限時間 ${state.durationMin}分`;
 
-      // ラウンド切替ボタンを閲覧モードでも使えるようにラウンド選択バーを出力
       if (isViewerMode) {
         document.getElementById('current-round-sub').innerHTML = `
           <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
@@ -1195,7 +1182,6 @@
             </div>`;
         }).join('');
 
-        // 閲覧専用モードでは入力欄や勝利ボタンを一切描画せず、スコア表示のみにする（改ざん完全防止）
         const footerHtml = isViewerMode
           ? `<div class="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex items-center justify-center gap-3">
                <span class="text-xs font-bold text-slate-500">スコア</span>
@@ -1440,9 +1426,7 @@
 
     function adjustTimer(deltaSeconds) {
       timerSeconds = Math.max(0, Math.min(99 * 60, timerSeconds + deltaSeconds));
-      if (timerSeconds > 300) {
-        warningPlayed = false;
-      }
+      if (timerSeconds > 300) warningPlayed = false;
       updateTimerDisplay();
     }
 
@@ -1452,17 +1436,13 @@
         timerInterval = null;
         document.getElementById('timer-start-btn').textContent = '▶ 再開';
       } else {
-        // ブラウザの音声再生制限を解除するため、スタート押下時に無音でAudioContextを初期化
         unlockAudioContext();
         document.getElementById('timer-start-btn').textContent = '⏸ 一時停止';
         timerInterval = setInterval(() => {
           if (timerSeconds > 0) {
             timerSeconds--;
             updateTimerDisplay();
-            if (timerSeconds === 300 && !warningPlayed) {
-              warningPlayed = true;
-              playWhistle('warning');
-            }
+            if (timerSeconds === 300 && !warningPlayed) { warningPlayed = true; playWhistle('warning'); }
             if (timerSeconds === 0) {
               clearInterval(timerInterval);
               timerInterval = null;
@@ -1518,31 +1498,105 @@
       } catch (e) {}
     }
 
-    // ==================== 閲覧専用ページ分離＆QR共有 ====================
+    // ==================== 超圧縮エンコーダ・デコーダ（QR読み取り精度を劇的改善） ====================
+    function encodeCompactState() {
+      const idxMap = {};
+      state.players.forEach((p, i) => { idxMap[p.id] = i; });
+      const arr = [
+        state.tournamentName,
+        state.tournamentDate,
+        state.plannedRounds,
+        state.durationMin,
+        state.rankingMode === 'bhs' ? 0 : 1,
+        state.ptWin,
+        state.ptDraw,
+        state.ptLoss,
+        state.currentRoundIndex,
+        state.players.map(p => [p.name, p.assoc]),
+        state.rounds.map(r => [
+          r.resting.map(id => idxMap[id] ?? 0),
+          r.courts.map(c => [
+            c.type === '3×3' ? 0 : (c.type === '2×3' ? 1 : 2),
+            c.red.map(id => idxMap[id] ?? 0),
+            c.blue.map(id => idxMap[id] ?? 0),
+            c.scoreRed === null ? -1 : c.scoreRed,
+            c.scoreBlue === null ? -1 : c.scoreBlue
+          ])
+        ])
+      ];
+      const jsonStr = JSON.stringify(arr);
+      const b64 = btoa(unescape(encodeURIComponent(jsonStr)))
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      return b64;
+    }
+
+    function decodeCompactState(b64url) {
+      let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const jsonStr = decodeURIComponent(escape(atob(b64)));
+      const arr = JSON.parse(jsonStr);
+      const st = createDefaultState();
+      st.tournamentName = arr[0];
+      st.tournamentDate = arr[1];
+      st.plannedRounds = arr[2];
+      st.durationMin = arr[3];
+      st.rankingMode = arr[4] === 0 ? 'bhs' : 'points';
+      st.ptWin = arr[5];
+      st.ptDraw = arr[6];
+      st.ptLoss = arr[7];
+      st.currentRoundIndex = arr[8] || 0;
+      st.players = (arr[9] || []).map((p, i) => ({ id: 'vp_' + i, name: p[0], assoc: p[1] }));
+      const typeNames = ['3×3', '2×3', '2×2'];
+      st.rounds = (arr[10] || []).map((r, rIdx) => ({
+        roundNum: rIdx + 1,
+        resting: (r[0] || []).map(idx => 'vp_' + idx),
+        courts: (r[1] || []).map((c, cIdx) => ({
+          courtNum: cIdx + 1,
+          type: typeNames[c[0]] || '2×2',
+          red: (c[1] || []).map(idx => 'vp_' + idx),
+          blue: (c[2] || []).map(idx => 'vp_' + idx),
+          scoreRed: c[3] === -1 ? null : c[3],
+          scoreBlue: c[4] === -1 ? null : c[4]
+        }))
+      }));
+      return st;
+    }
+
     function buildShareUrl() {
-      const compact = {
-        tournamentName: state.tournamentName,
-        tournamentDate: state.tournamentDate,
-        plannedRounds: state.plannedRounds,
-        durationMin: state.durationMin,
-        rankingMode: state.rankingMode,
-        ptWin: state.ptWin,
-        ptDraw: state.ptDraw,
-        ptLoss: state.ptLoss,
-        players: state.players,
-        rounds: state.rounds,
-        currentRoundIndex: state.currentRoundIndex
-      };
-      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(compact))));
-      return `${window.location.href.split('#')[0]}#view=${b64}`;
+      const compactPayload = encodeCompactState();
+      return `${window.location.href.split('#')[0]}#v=${compactPayload}`;
     }
 
     function openQrModal() {
       if (isViewerMode) return;
       document.getElementById('qr-modal-title').textContent = state.tournamentName;
       const box = document.getElementById('qrcode-box');
+      const statusEl = document.getElementById('qr-status-text');
       box.innerHTML = '';
-      new QRCode(box, { text: buildShareUrl(), width: 210, height: 210, correctLevel: QRCode.CorrectLevel.L });
+
+      const shareUrl = buildShareUrl();
+      try {
+        new QRCode(box, {
+          text: shareUrl,
+          width: 260,
+          height: 260,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        statusEl.innerHTML = `スマホのカメラで読み取ると<strong>閲覧専用ページ</strong>が開きます。<br/>（※ラウンド進行や得点入力後は再度QRコードを表示して共有してください）`;
+      } catch (e) {
+        // 万が一人数が非常に多い場合は誤り訂正Lで再生成
+        box.innerHTML = '';
+        new QRCode(box, {
+          text: shareUrl,
+          width: 270,
+          height: 270,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.L
+        });
+      }
       document.getElementById('qr-modal').classList.remove('hidden');
     }
 
@@ -1551,7 +1605,6 @@
 
     function enterViewerMode() {
       isViewerMode = true;
-      // 管理者専用UIを完全に非表示・削除して改ざん防止
       document.getElementById('admin-header').classList.add('hidden');
       document.getElementById('admin-mobile-nav').classList.add('hidden');
       document.getElementById('timer-card').classList.add('hidden');
@@ -1560,7 +1613,6 @@
       document.getElementById('tab-guide').classList.add('hidden');
       document.getElementById('tab-setup').classList.add('hidden');
 
-      // 閲覧専用ヘッダーを表示
       document.getElementById('viewer-header').classList.remove('hidden');
       document.getElementById('viewer-tournament-name').textContent = state.tournamentName;
       document.getElementById('viewer-date-badge').textContent = `開催日: ${state.tournamentDate || ''} ／ 出場: ${state.players.length}名`;
