@@ -4,225 +4,312 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>めれメレ｜ペタンク・メレ大会運営システム</title>
-  <meta name="description" content="めれメレ（メレメレ）は、ペタンクのメレ・スーパーメレ大会の組み合わせ自動抽選、50分/45分ホイッスルタイマー、BHS・ポイント順位集計、PDF出力ができる無料Webアプリです。" />
-  <meta name="keywords" content="めれメレ,メレメレ,ペタンク,メレ,スーパーメレ,大会運営,組み合わせ,抽選,BHS,ソルコフ,PDF" />
-  <meta property="og:title" content="めれメレ｜ペタンク・メレ大会運営システム" />
-  <meta property="og:description" content="ペタンク個人戦（メレ形式）の自動抽選・タイマー・QR閲覧共有・順位PDF出力アプリ「めれメレ」" />
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap');
-    body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; color: #1e293b; -webkit-tap-highlight-color: transparent; }
-    .tab-active { border-bottom: 3px solid #0f766e; color: #0f766e; font-weight: 700; background-color: #f0fdfa; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+      padding-bottom: 84px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (min-width: 768px) { body { padding-bottom: 40px; } }
+
+    .hidden { display: none !important; }
+    .container { max-width: 1152px; margin: 0 auto; padding: 0 14px; }
+    .main-area { max-width: 1152px; margin: 0 auto; padding: 16px 12px 0; }
+    @media (min-width: 768px) { .main-area { padding: 24px 16px 0; } }
+
+    /* ヘッダー・ナビ */
+    .admin-header { background: linear-gradient(90deg, #115e59, #065f46); color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
+    .header-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 0; }
+    .badge-amber { background: #fbbf24; color: #0f172a; font-size: 11px; font-weight: 900; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+    .badge-mode { background: rgba(4,47,46,0.55); color: #ccfbf1; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(94,234,212,0.4); }
+    .header-sub { font-size: 12px; color: #ccfbf1; font-weight: 600; }
+    .header-title { margin: 4px 0 0; font-size: 19px; font-weight: 900; letter-spacing: -0.01em; }
+    @media (min-width: 768px) { .header-title { font-size: 24px; } }
+
+    .desktop-nav { background: #fff; border-bottom: 1px solid #e2e8f0; display: none; }
+    @media (min-width: 768px) { .desktop-nav { display: block; } }
+    .desktop-nav-inner { display: flex; gap: 4px; }
+    .nav-btn {
+      background: none; border: none; border-bottom: 3px solid transparent;
+      padding: 12px 18px; font-size: 14px; font-weight: 600; color: #475569; cursor: pointer;
+    }
+    .nav-btn:hover { color: #0f766e; }
+    .nav-btn.tab-active { border-bottom-color: #0f766e; color: #0f766e; font-weight: 800; background: #f0fdfa; }
+
+    .mobile-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-top: 1px solid #e2e8f0;
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.08); z-index: 40;
+    }
+    @media (min-width: 768px) { .mobile-nav { display: none; } }
+    .mnav-btn {
+      background: none; border: none; padding: 8px 4px;
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 11px; font-weight: 600; color: #64748b; cursor: pointer;
+    }
+    .mnav-btn.active { color: #0f766e; font-weight: 800; background: rgba(240,253,250,0.8); }
+
+    /* 閲覧者ヘッダー */
+    .viewer-header { background: linear-gradient(90deg, #0f172a, #115e59, #0f172a); color: #fff; padding: 14px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .viewer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+    .viewer-title { margin: 0; font-size: 20px; font-weight: 900; }
+    .viewer-status { font-size: 11px; color: #99f6e4; margin-top: 2px; }
+
+    /* カード・グリッド */
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .hero-card { background: linear-gradient(135deg, #115e59, #0f766e, #065f46); color: #fff; border-radius: 18px; padding: 24px; box-shadow: 0 8px 20px rgba(15,118,110,0.2); }
+    .hero-flex { display: flex; flex-direction: column; gap: 20px; }
+    @media (min-width: 768px) { .hero-flex { flex-direction: row; align-items: center; justify-content: space-between; } }
+    .grid-2 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 768px) { .grid-2 { grid-template-columns: repeat(2, 1fr); } }
+    .grid-3 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+    .setup-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+    @media (min-width: 1024px) {
+      .setup-grid { grid-template-columns: 5fr 7fr; }
+    }
+    .stack-lg > * + * { margin-top: 20px; }
+    .stack-md > * + * { margin-top: 12px; }
+    .stack-sm > * + * { margin-top: 8px; }
+
+    /* ボタン・フォーム */
+    button { font-family: inherit; cursor: pointer; }
+    .btn { border: none; border-radius: 10px; font-weight: 700; padding: 8px 14px; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: opacity 0.15s, transform 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-white { background: #fff; color: #115e59; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+    .btn-amber { background: #fbbf24; color: #0f172a; font-weight: 900; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+    .btn-teal { background: #0f766e; color: #fff; }
+    .btn-teal:hover { background: #0d9488; }
+    .btn-slate { background: #1e293b; color: #fff; }
+    .btn-light { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-rose { background: #e11d48; color: #fff; }
+    .btn-sky { background: #0284c7; color: #fff; }
+    .btn-ghost-white { background: rgba(255,255,255,0.16); color: #fff; border: 1px solid rgba(255,255,255,0.25); }
+
+    input[type="text"], input[type="number"], input[type="date"], select, textarea {
+      width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px;
+      font-size: 14px; font-family: inherit; background: #fff; color: #0f172a;
+    }
+    input:focus, select:focus, textarea:focus { outline: 2px solid #0f766e; border-color: #0f766e; }
+    label.field-label { display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 4px; }
+
+    .court-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .court-btn { padding: 6px 4px; border-radius: 8px; font-size: 12px; font-weight: 700; border: 1px solid #cbd5e1; background: #fff; color: #334155; }
+    .court-btn.active { background: #0f766e; color: #fff; border-color: #0f766e; }
+
+    .preview-box { margin-top: 8px; background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 8px; padding: 10px; font-size: 12px; color: #134e4a; font-weight: 600; }
+    .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; }
+    .warn-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #78350f; }
+
+    /* 参加者リスト */
+    .player-list { max-height: 500px; overflow-y: auto; }
+    .player-row {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; margin-bottom: 8px;
+    }
+    .assoc-chip { padding: 3px 7px; border-radius: 5px; font-size: 11px; font-weight: 700; border: 1px solid #e2e8f0; background: #fff; color: #94a3b8; }
+    .assoc-chip.active { color: #0f172a; border-color: #64748b; background: #e2e8f0; }
+
+    /* タイマー・対戦カード */
+    .timer-box { background: #0f172a; color: #fff; padding: 8px 16px; border-radius: 12px; text-align: center; min-width: 132px; }
+    .timer-box.warn { background: #d97706; }
+    .timer-box.end { background: #be123c; }
+    .timer-num { font-size: 28px; font-weight: 900; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .court-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .court-head { background: #1e293b; color: #fff; padding: 8px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 800; }
+    .court-body { padding: 14px; display: grid; grid-template-columns: 5fr 1fr 5fr; gap: 8px; align-items: center; }
+    .team-red { background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 10px; }
+    .team-red.win { background: #ffe4e6; border-color: #fb7185; }
+    .team-blue { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 10px; }
+    .team-blue.win { background: #e0f2fe; border-color: #38bdf8; }
+    .court-foot { background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 10px 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+    .score-input { width: 50px !important; text-align: center; font-weight: 900 !important; font-size: 16px !important; padding: 4px !important; }
+    .highlight-me { background: #fde047; color: #0f172a; padding: 2px 6px; border-radius: 6px; font-weight: 900; }
+
+    /* テーブル・表彰 */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+    th { background: #f1f5f9; color: #334155; font-size: 12px; padding: 10px 8px; border-top: 1px solid #e2e8f0; border-bottom: 1px solid #cbd5e1; }
+    td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; }
+    .text-center { text-align: center; }
+
+    /* QRコード（1つだけ表示） */
     #qrcode-box {
       width: 196px;
       height: 196px;
       display: flex;
       align-items: center;
       justify-content: center;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px;
+      margin: 0 auto;
     }
-    #qrcode-box canvas {
-      display: none !important;
-    }
-    #qrcode-box img {
-      width: 176px !important;
-      height: 176px !important;
-      margin: 0 auto !important;
-      display: block !important;
-    }
+    #qrcode-box canvas { display: none !important; }
+    #qrcode-box img { width: 176px !important; height: 176px !important; display: block !important; margin: 0 auto !important; }
 
-    /* PDF保存・印刷専用スタイル */
+    /* モーダル */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,0.72); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+    .modal-card { background: #fff; border-radius: 18px; width: 100%; max-width: 440px; padding: 22px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); max-height: 88vh; overflow-y: auto; }
+
     @media print {
       @page { size: A4 portrait; margin: 12mm; }
       .no-print { display: none !important; }
-      body { background: white !important; padding-bottom: 0 !important; color: #0f172a !important; }
-      main { max-width: 100% !important; padding: 0 !important; }
-      .card-shadow { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+      body { background: #fff !important; padding-bottom: 0 !important; }
+      .card { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
       .print-only-header { display: block !important; }
-      table { font-size: 11px !important; }
-      th, td { padding: 5px 6px !important; }
     }
   </style>
 </head>
-<body class="pb-24 md:pb-12">
+<body>
 
-  <!-- ==================== 閲覧専用ページ用ヘッダー ==================== -->
-  <div id="viewer-header" class="hidden bg-gradient-to-r from-slate-900 via-teal-900 to-slate-900 text-white shadow-md no-print">
-    <div class="max-w-5xl mx-auto px-4 py-3.5 space-y-2.5">
-      <div class="flex flex-wrap items-center justify-between gap-2">
-        <div class="flex items-center gap-2">
-          <span class="bg-amber-400 text-slate-950 text-xs font-black px-2.5 py-0.5 rounded">めれメレ</span>
-          <span class="bg-white/15 text-teal-100 text-[11px] font-bold px-2 py-0.5 rounded border border-white/20">選手・観客用 閲覧専用ページ</span>
+  <!-- 閲覧専用ページ用ヘッダー -->
+  <div id="viewer-header" class="viewer-header hidden no-print">
+    <div class="container">
+      <div class="viewer-row">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="badge-amber">めれメレ</span>
+          <span class="badge-mode">選手・観客用 閲覧専用</span>
+          <span id="viewer-date-badge" style="font-size:12px;color:#cbd5e1;"></span>
         </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="viewer-date-badge" class="text-xs text-slate-300 font-medium"></span>
-          <button onclick="refreshViewerFromCloud(true)" id="viewer-refresh-btn" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs px-3.5 py-1.5 rounded-lg shadow flex items-center gap-1 transition active:scale-95">
-            <span>🔄 最新情報に更新</span>
-          </button>
-          <button onclick="toggleViewerAutoRefresh()" id="viewer-auto-btn" class="bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/20 transition">
-            自動更新: OFF
-          </button>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button onclick="refreshViewerFromCloud(true)" id="viewer-refresh-btn" class="btn btn-amber">🔄 最新情報に更新</button>
+          <button onclick="toggleViewerAutoRefresh()" id="viewer-auto-btn" class="btn btn-ghost-white" style="font-size:11px;padding:6px 10px;">自動更新: OFF</button>
         </div>
       </div>
-      <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="viewer-row" style="margin-bottom:6px;">
         <div>
-          <h1 id="viewer-tournament-name" class="text-lg md:text-2xl font-black tracking-tight">ペタンク・メレ大会</h1>
-          <div id="viewer-sync-status" class="text-[11px] text-teal-200 mt-0.5">読み込み中...</div>
+          <h1 id="viewer-tournament-name" class="viewer-title">ペタンク・メレ大会</h1>
+          <div id="viewer-sync-status" class="viewer-status">読み込み中...</div>
         </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <label class="text-xs text-teal-200 font-bold whitespace-nowrap">🔍 自分の名前：</label>
-          <select id="viewer-player-select" onchange="setViewerHighlight(this.value)" class="flex-1 sm:w-52 text-slate-900 text-sm rounded-lg px-2.5 py-1.5 font-bold bg-white shadow-sm">
+        <div style="display:flex;align-items:center;gap:6px;min-width:220px;">
+          <span style="font-size:12px;font-weight:700;color:#99f6e4;white-space:nowrap;">🔍 自分の名前：</span>
+          <select id="viewer-player-select" onchange="setViewerHighlight(this.value)">
             <option value="">ハイライト表示を選択...</option>
           </select>
         </div>
       </div>
-      <div class="flex gap-2 pt-1">
-        <button onclick="switchViewerTab('matches')" id="vtab-matches" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-black bg-amber-400 text-slate-950 shadow">
-          🎯 対戦表を見る
-        </button>
-        <button onclick="switchViewerTab('standings')" id="vtab-standings" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold bg-white/15 text-white hover:bg-white/25">
-          🏆 現在の順位表を見る
-        </button>
+      <div style="display:flex;gap:8px;padding-top:4px;">
+        <button onclick="switchViewerTab('matches')" id="vtab-matches" class="btn btn-amber">🎯 対戦表を見る</button>
+        <button onclick="switchViewerTab('standings')" id="vtab-standings" class="btn btn-ghost-white">🏆 現在の順位表を見る</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== 管理者用メインヘッダー ==================== -->
-  <header id="admin-header" class="bg-gradient-to-r from-teal-800 to-emerald-800 text-white shadow-md no-print">
-    <div class="max-w-6xl mx-auto px-4 py-3 md:py-4 flex flex-wrap items-center justify-between gap-3">
+  <!-- 管理者用メインヘッダー -->
+  <header id="admin-header" class="admin-header no-print">
+    <div class="container header-top">
       <div>
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="bg-amber-400 text-slate-950 text-xs font-black px-2 py-0.5 rounded">めれメレ</span>
-          <span class="bg-teal-950/50 text-teal-100 text-[11px] font-bold px-2 py-0.5 rounded border border-teal-500/40">管理者モード</span>
-          <span id="header-rule-badge" class="text-xs text-teal-100 font-medium">11点先取 ／ 50分制</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <span class="badge-amber">めれメレ</span>
+          <span class="badge-mode">オフライン運営対応</span>
+          <span id="header-rule-badge" class="header-sub">11点先取 ／ 50分制</span>
         </div>
-        <h1 id="header-title" class="text-lg md:text-2xl font-black tracking-tight mt-0.5">めれメレ - ペタンク・メレ大会運営システム</h1>
+        <h1 id="header-title" class="header-title">めれメレ - ペタンク・メレ大会運営システム</h1>
       </div>
-      <div class="flex items-center gap-2">
-        <button onclick="openCreateTournamentModal()" class="bg-white text-teal-900 hover:bg-teal-50 font-black text-xs md:text-sm px-3 py-2 rounded-lg shadow flex items-center gap-1 transition">
-          <span>✨ 新規大会作成</span>
-        </button>
-        <button onclick="openQrModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold text-xs md:text-sm px-3 py-2 rounded-lg shadow flex items-center gap-1 transition">
-          <span>📱 閲覧用QR共有</span>
-        </button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="openCreateTournamentModal()" class="btn btn-white">✨ 新規大会作成</button>
+        <button onclick="openQrModal()" class="btn btn-amber">📱 閲覧用QR共有</button>
       </div>
     </div>
 
-    <nav class="bg-white text-slate-600 border-b border-slate-200 hidden md:block">
-      <div class="max-w-6xl mx-auto px-4 flex">
-        <button onclick="switchTab('guide')" id="nav-guide" class="px-5 py-3 text-sm font-medium hover:text-teal-700 transition tab-active">📖 はじめに（大会作成）</button>
-        <button onclick="switchTab('setup')" id="nav-setup" class="px-5 py-3 text-sm font-medium hover:text-teal-700 transition">1. 大会設定・参加者</button>
-        <button onclick="switchTab('matches')" id="nav-matches" class="px-5 py-3 text-sm font-medium hover:text-teal-700 transition">2. 対戦表・タイマー・得点</button>
-        <button onclick="switchTab('standings')" id="nav-standings" class="px-5 py-3 text-sm font-medium hover:text-teal-700 transition">3. 順位表・PDF保存・終了</button>
+    <nav class="desktop-nav">
+      <div class="container desktop-nav-inner">
+        <button onclick="switchTab('guide')" id="nav-guide" class="nav-btn tab-active">📖 はじめに（大会作成）</button>
+        <button onclick="switchTab('setup')" id="nav-setup" class="nav-btn">1. 大会設定・参加者</button>
+        <button onclick="switchTab('matches')" id="nav-matches" class="nav-btn">2. 対戦表・タイマー・得点</button>
+        <button onclick="switchTab('standings')" id="nav-standings" class="nav-btn">3. 順位表・PDF保存・終了</button>
       </div>
     </nav>
   </header>
 
-  <main class="max-w-6xl mx-auto px-3 md:px-4 pt-4 md:pt-6">
+  <main class="main-area">
 
-    <!-- ==================== TAB 0: 使い方ガイド＆大会作成スタート画面 ==================== -->
-    <section id="tab-guide" class="space-y-6">
-      <div class="bg-gradient-to-br from-teal-800 via-teal-700 to-emerald-800 text-white rounded-2xl p-6 md:p-8 shadow-lg">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2 max-w-2xl">
-            <div class="inline-flex items-center gap-2 bg-white/15 px-3 py-1 rounded-full text-xs font-bold">
-              <span>🎯 ペタンク個人戦（メレ／スーパーメレ）運営Webアプリ</span>
-            </div>
-            <h2 class="text-2xl md:text-3xl font-black tracking-tight">めれメレ で新しい大会を始める</h2>
-            <p class="text-sm md:text-base text-teal-100 leading-relaxed">
-              開催日や大会名を設定して、参加者登録・交流＆コート分散抽選・ホイッスルタイマー・閲覧専用QR共有・最終順位PDF出力までこれ1つで完結します。
-            </p>
-            <div id="active-tournament-notice" class="hidden pt-2">
-              <div class="inline-flex flex-wrap items-center gap-2 bg-black/25 border border-white/20 rounded-xl px-3.5 py-2 text-xs">
-                <span>📂 現在保存中の大会：<strong id="active-tournament-label" class="text-amber-300"></strong></span>
-                <button onclick="switchTab('setup')" class="underline font-bold text-white hover:text-amber-200 ml-1">続きを開く ➡</button>
-              </div>
+    <!-- TAB 0: スタート画面 -->
+    <section id="tab-guide" class="stack-lg">
+      <div class="hero-card hero-flex">
+        <div class="stack-sm" style="max-width:640px;">
+          <div style="display:inline-block;background:rgba(255,255,255,0.16);padding:4px 12px;border-radius:999px;font-size:12px;font-weight:700;">
+            🎯 ペタンク個人戦（メレ／スーパーメレ）運営Webアプリ
+          </div>
+          <h2 style="margin:0;font-size:26px;font-weight:900;">めれメレ で新しい大会を始める</h2>
+          <p style="margin:0;font-size:14px;color:#ccfbf1;line-height:1.6;">
+            最初にページを開いたあとは、通信環境がないオフラインでも大会名入力・参加者登録・抽選・タイマー・得点入力・順位集計までそのまま使えます。
+          </p>
+          <div id="active-tournament-notice" class="hidden" style="padding-top:6px;">
+            <div style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.2);border-radius:10px;padding:8px 12px;font-size:12px;">
+              <span>📂 保存中の大会：<strong id="active-tournament-label" style="color:#fde047;"></strong></span>
+              <button onclick="switchTab('setup')" style="background:none;border:none;color:#fff;font-weight:800;text-decoration:underline;">続きを開く ➡</button>
             </div>
           </div>
+        </div>
 
-          <div class="flex flex-col gap-2.5 shrink-0">
-            <button onclick="openCreateTournamentModal()" class="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-7 py-4 rounded-2xl shadow-lg transition text-base md:text-lg flex items-center justify-center gap-2">
-              <span>🏆 大会を作成する</span>
-            </button>
-            <button onclick="loadSampleAndGo()" class="bg-white/15 hover:bg-white/25 text-white font-bold text-xs px-4 py-2.5 rounded-xl border border-white/25 transition text-center">
-              📋 サンプル33名を入れて動作を試す
-            </button>
-          </div>
+        <div class="stack-sm" style="min-width:230px;">
+          <button onclick="openCreateTournamentModal()" class="btn btn-amber" style="width:100%;padding:14px 18px;font-size:16px;border-radius:14px;">
+            🏆 大会を作成する
+          </button>
+          <button onclick="loadSampleAndGo()" class="btn btn-ghost-white" style="width:100%;padding:10px 14px;font-size:12px;">
+            📋 サンプル33名を入れて試す
+          </button>
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl p-5 md:p-7 shadow-sm border border-slate-200">
-        <h3 class="text-lg font-black text-slate-800 border-b border-slate-100 pb-3">運営の流れ（4ステップ）</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <div class="flex items-center gap-2.5 mb-1.5">
-              <span class="w-7 h-7 rounded-full bg-teal-700 text-white font-black flex items-center justify-center text-xs">1</span>
-              <h4 class="font-bold text-slate-800 text-sm md:text-base">「大会を作成する」から大会名・開催日を入力</h4>
-            </div>
-            <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              開催日と大会名、ラウンド数、順位方式（<strong>BHS方式</strong> または <strong>ポイント制</strong>）を設定して参加者を登録します。
-            </p>
+      <div class="card">
+        <h3 style="margin:0 0 14px;font-size:17px;font-weight:900;border-bottom:1px solid #f1f5f9;padding-bottom:10px;">オフライン運用の流れ</h3>
+        <div class="grid-2">
+          <div class="info-box">
+            <div style="font-weight:800;font-size:14px;margin-bottom:4px;">1. 電波のある場所でページを開く</div>
+            <div style="font-size:13px;color:#475569;line-height:1.5;">会場へ行く前にページを開いておきます。一度開けば、会場で通信が切れても画面表示と保存が動きます。</div>
           </div>
-
-          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <div class="flex items-center gap-2.5 mb-1.5">
-              <span class="w-7 h-7 rounded-full bg-teal-700 text-white font-black flex items-center justify-center text-xs">2</span>
-              <h4 class="font-bold text-slate-800 text-sm md:text-base">交流＆コート分散を考慮した自動抽選</h4>
-            </div>
-            <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              <strong>同じ人となるべく組まない・当たらない</strong>ようにしつつ、<strong>一度使ったコートはなるべく避けて</strong>満遍なく割り振ります。
-            </p>
+          <div class="info-box">
+            <div style="font-weight:800;font-size:14px;margin-bottom:4px;">2. 大会名・開催日・参加者を登録</div>
+            <div style="font-size:13px;color:#475569;line-height:1.5;">大会名や開催日、順位方式（BHS／ポイント制）を設定し、選手を追加します。入力内容は端末内に自動保存されます。</div>
           </div>
-
-          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <div class="flex items-center gap-2.5 mb-1.5">
-              <span class="w-7 h-7 rounded-full bg-teal-700 text-white font-black flex items-center justify-center text-xs">3</span>
-              <h4 class="font-bold text-slate-800 text-sm md:text-base">QRは1回読むだけ！閲覧ページの「更新」ボタン</h4>
-            </div>
-            <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              選手はQRコードを1回読み込むだけ。あとは閲覧者ページの<strong>「🔄 最新情報に更新」</strong>を押せば最新スコアや次の回戦がすぐ反映されます。
-            </p>
+          <div class="info-box">
+            <div style="font-weight:800;font-size:14px;margin-bottom:4px;">3. 交流＆コート分散を考慮した抽選</div>
+            <div style="font-size:13px;color:#475569;line-height:1.5;">同じペア・対戦相手の重複や、同じコートの連続利用なるべく避けるように組み合わせを作ります。</div>
           </div>
-
-          <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
-            <div class="flex items-center gap-2.5 mb-1.5">
-              <span class="w-7 h-7 rounded-full bg-teal-700 text-white font-black flex items-center justify-center text-xs">4</span>
-              <h4 class="font-bold text-slate-800 text-sm md:text-base">最終順位をPDF保存 ➡ 「大会終了」でリセット</h4>
-            </div>
-            <p class="text-xs md:text-sm text-slate-600 leading-relaxed">
-              全ラウンド終了後は開催日・出場者数入りの最終順位表を<strong>PDFで保存</strong>して共有できます。最後に<strong>「大会終了」</strong>を押せば次回へ綺麗にリセットされます。
-            </p>
+          <div class="info-box">
+            <div style="font-weight:800;font-size:14px;margin-bottom:4px;">4. タイマー・得点入力・順位表・終了</div>
+            <div style="font-size:13px;color:#475569;line-height:1.5;">50分/45分タイマーや得点入力で順位が自動計算されます。終わったらPDF保存し、「大会終了」でリセットできます。</div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== TAB 1: 大会設定・参加者 ==================== -->
-    <section id="tab-setup" class="hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <div class="lg:col-span-5 space-y-5">
-          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h2 class="text-lg font-black text-slate-800">⚙️ 大会基本設定</h2>
-              <button onclick="openCreateTournamentModal()" class="text-xs font-bold text-teal-700 hover:underline">＋ 新規大会を作り直す</button>
+    <!-- TAB 1: 大会設定・参加者 -->
+    <section id="tab-setup" class="hidden">
+      <div class="setup-grid">
+        <div class="stack-lg">
+          <div class="card stack-md">
+            <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:8px;">
+              <h2 style="margin:0;font-size:17px;font-weight:900;">⚙️ 大会基本設定</h2>
+              <button onclick="openCreateTournamentModal()" style="background:none;border:none;color:#0f766e;font-size:12px;font-weight:700;text-decoration:underline;">＋ 新規作成</button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div class="sm:col-span-2">
-                <label class="block text-xs font-bold text-slate-600 mb-1">大会名（ヘッダー・QR・PDFに反映）</label>
-                <input type="text" id="tournament-name" value="ペタンク・メレ大会" oninput="updateConfig()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-teal-500 outline-none" />
+            <div class="grid-2">
+              <div>
+                <label class="field-label">大会名</label>
+                <input type="text" id="tournament-name" value="ペタンク・メレ大会" oninput="updateConfig()" />
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">開催日（PDF記録用）</label>
-                <input type="date" id="tournament-date" onchange="updateConfig()" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold bg-white" />
+                <label class="field-label">開催日</label>
+                <input type="date" id="tournament-date" onchange="updateConfig()" />
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid-2">
               <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">本日の予定ラウンド数</label>
-                <select id="planned-rounds" onchange="updateConfig()" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold bg-white">
+                <label class="field-label">予定ラウンド数</label>
+                <select id="planned-rounds" onchange="updateConfig()">
                   <option value="3">全 3 回戦</option>
                   <option value="4" selected>全 4 回戦</option>
                   <option value="5">全 5 回戦</option>
@@ -232,8 +319,8 @@
                 </select>
               </div>
               <div>
-                <label class="block text-xs font-bold text-slate-600 mb-1">試合時間（11点先取制）</label>
-                <select id="match-duration" onchange="changeDuration(this.value)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold bg-white">
+                <label class="field-label">試合時間（11点先取制）</label>
+                <select id="match-duration" onchange="changeDuration(this.value)">
                   <option value="50" selected>50分（11点先取）</option>
                   <option value="45">45分（11点先取）</option>
                 </select>
@@ -241,81 +328,73 @@
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1.5">使用コート数（トリプルス・ダブルス・2×3自動調整）</label>
-              <div id="court-buttons" class="grid grid-cols-5 gap-1.5"></div>
-              <div id="court-preview-box" class="mt-2 bg-teal-50 border border-teal-200 rounded-lg p-2.5 text-xs text-teal-900 font-medium">
-                構成プレビューを計算中...
-              </div>
+              <label class="field-label">使用コート数</label>
+              <div id="court-buttons" class="court-grid"></div>
+              <div id="court-preview-box" class="preview-box">構成プレビューを計算中...</div>
             </div>
 
-            <div class="pt-2 border-t border-slate-100">
-              <label class="block text-xs font-bold text-slate-600 mb-2">順位決定方式の選択</label>
-              <div class="space-y-2">
-                <label class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition bg-slate-50 hover:bg-teal-50/50 border-slate-200">
-                  <input type="radio" name="rankingMode" value="bhs" checked onchange="updateConfig()" class="mt-1 accent-teal-700" />
-                  <div>
-                    <div class="text-sm font-bold text-slate-800">標準：勝利数 ＋ BHS方式（ソルコフ）</div>
-                    <div class="text-xs text-slate-500">①勝利数 → ②BHS（対戦相手・味方の勝利数合計）→ ③得失点差 → ④総得点</div>
-                  </div>
-                </label>
+            <div style="border-top:1px solid #f1f5f9;padding-top:10px;" class="stack-sm">
+              <label class="field-label">順位決定方式</label>
+              <label class="info-box" style="display:flex;align-items:flex-start;gap:8px;padding:10px;">
+                <input type="radio" name="rankingMode" value="bhs" checked onchange="updateConfig()" style="width:auto;margin-top:3px;" />
+                <div>
+                  <div style="font-size:13px;font-weight:800;">標準：勝利数 ＋ BHS方式（ソルコフ）</div>
+                  <div style="font-size:11px;color:#64748b;">①勝利数 → ②BHS → ③得失点差 → ④総得点</div>
+                </div>
+              </label>
 
-                <label class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition bg-slate-50 hover:bg-teal-50/50 border-slate-200">
-                  <input type="radio" name="rankingMode" value="points" onchange="updateConfig()" class="mt-1 accent-teal-700" />
-                  <div>
-                    <div class="text-sm font-bold text-slate-800">カスタムポイント制（直接対決優先）</div>
-                    <div class="text-xs text-slate-500">①累計ポイント → ②直接対決の勝敗 → ③得失点差 → ④総得点</div>
-                  </div>
-                </label>
-              </div>
+              <label class="info-box" style="display:flex;align-items:flex-start;gap:8px;padding:10px;">
+                <input type="radio" name="rankingMode" value="points" onchange="updateConfig()" style="width:auto;margin-top:3px;" />
+                <div>
+                  <div style="font-size:13px;font-weight:800;">カスタムポイント制（直接対決優先）</div>
+                  <div style="font-size:11px;color:#64748b;">①累計ポイント → ②直接対決 → ③得失点差 → ④総得点</div>
+                </div>
+              </label>
 
-              <div id="custom-points-box" class="hidden mt-3 bg-amber-50/70 border border-amber-200 rounded-xl p-3 space-y-2">
-                <div class="text-xs font-bold text-amber-900">ポイント配分設定（参加点は敗戦時のみ加点）</div>
-                <div class="grid grid-cols-3 gap-2">
+              <div id="custom-points-box" class="warn-box hidden stack-sm">
+                <div style="font-weight:800;">ポイント配分設定</div>
+                <div class="grid-3">
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600">勝利点</label>
-                    <input type="number" step="0.5" id="pt-win" value="1" oninput="updateConfig()" class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-bold bg-white" />
+                    <label class="field-label">勝利点</label>
+                    <input type="number" step="0.5" id="pt-win" value="1" oninput="updateConfig()" />
                   </div>
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600">引き分け点</label>
-                    <input type="number" step="0.5" id="pt-draw" value="0.5" oninput="updateConfig()" class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-bold bg-white" />
+                    <label class="field-label">引き分け点</label>
+                    <input type="number" step="0.5" id="pt-draw" value="0.5" oninput="updateConfig()" />
                   </div>
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600">参加点(敗戦時)</label>
-                    <input type="number" step="0.5" id="pt-loss" value="0" oninput="updateConfig()" class="w-full border border-slate-300 rounded px-2 py-1 text-sm font-bold bg-white" />
+                    <label class="field-label">参加点(敗戦時)</label>
+                    <input type="number" step="0.5" id="pt-loss" value="0" oninput="updateConfig()" />
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="bg-gradient-to-br from-teal-700 to-emerald-800 text-white rounded-2xl p-5 shadow-md space-y-3">
-            <div class="text-sm font-bold opacity-90">参加者の登録が終わったら</div>
-            <button onclick="startFirstRound()" class="w-full bg-amber-400 hover:bg-amber-300 text-slate-900 font-black py-3.5 px-4 rounded-xl shadow text-base transition flex items-center justify-center gap-2">
-              <span>🎲 第1回戦の組み合わせを作成して開始</span>
+          <div class="hero-card" style="padding:18px;">
+            <div style="font-size:13px;font-weight:700;margin-bottom:8px;">参加者の登録が終わったら</div>
+            <button onclick="startFirstRound()" class="btn btn-amber" style="width:100%;padding:13px;font-size:15px;border-radius:12px;">
+              🎲 第1回戦の組み合わせを作成して開始
             </button>
           </div>
         </div>
 
-        <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+        <div class="card stack-md">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
             <div>
-              <h2 class="text-lg font-black text-slate-800">👥 参加者リスト（現在 <span id="player-count" class="text-teal-700 text-xl">0</span> 名）</h2>
-              <p class="text-xs text-slate-500">名前の横の協会ボタンを押すだけで所属を切り替えられます</p>
+              <h2 style="margin:0;font-size:17px;font-weight:900;">👥 参加者リスト（現在 <span id="player-count" style="color:#0f766e;font-size:20px;">0</span> 名）</h2>
+              <div style="font-size:12px;color:#64748b;">協会チップをタップして所属を切り替えられます</div>
             </div>
-            <div class="flex gap-2">
-              <button onclick="loadSample33()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-lg border border-slate-300 transition">
-                📋 サンプル33名読込
-              </button>
-              <button onclick="clearPlayers()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs px-3 py-2 rounded-lg border border-rose-200 transition">
-                全員削除
-              </button>
+            <div style="display:flex;gap:6px;">
+              <button onclick="loadSample33()" class="btn btn-light">📋 サンプル33名読込</button>
+              <button onclick="clearPlayers()" class="btn btn-light" style="color:#be123c;border-color:#fecdd3;background:#fff1f2;">全員削除</button>
             </div>
           </div>
 
-          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
-            <div class="flex flex-wrap gap-2">
-              <input type="text" id="new-player-name" placeholder="選手名を入力（例：佐藤 健太）" onkeydown="if(event.key==='Enter') addSinglePlayer()" class="flex-1 min-w-[180px] border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-teal-500 outline-none" />
-              <select id="new-player-assoc" class="border border-slate-300 rounded-lg px-2.5 py-2 text-sm font-bold bg-white">
+          <div class="info-box stack-sm">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <input type="text" id="new-player-name" placeholder="選手名を入力（例：佐藤 健太）" onkeydown="if(event.key==='Enter') addSinglePlayer()" style="flex:1;min-width:160px;" />
+              <select id="new-player-assoc" style="width:auto;">
                 <option value="0">協会なし</option>
                 <option value="1">1. 札幌市</option>
                 <option value="2">2. 北見市</option>
@@ -326,16 +405,15 @@
                 <option value="7">7. むかわ町</option>
                 <option value="8">8. 白老町</option>
               </select>
-              <button onclick="addSinglePlayer()" class="bg-teal-700 hover:bg-teal-600 text-white font-bold text-sm px-4 py-2 rounded-lg transition">
-                ＋ 追加
-              </button>
+              <button onclick="addSinglePlayer()" class="btn btn-teal">＋ 追加</button>
             </div>
-            <details class="text-xs text-slate-600">
-              <summary class="cursor-pointer font-bold text-teal-700 hover:underline">まとめて複数名を一括登録する（貼り付け入力）</summary>
-              <div class="mt-2 space-y-2 pt-2 border-t border-slate-200">
-                <div class="flex items-center gap-2">
-                  <span>一括登録時のデフォルト協会：</span>
-                  <select id="bulk-assoc" class="border border-slate-300 rounded px-2 py-1 bg-white font-bold">
+
+            <details style="font-size:12px;color:#475569;">
+              <summary style="cursor:pointer;font-weight:700;color:#0f766e;">まとめて複数名を一括登録する（改行区切り）</summary>
+              <div class="stack-sm" style="margin-top:8px;padding-top:8px;border-top:1px solid #e2e8f0;">
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span style="white-space:nowrap;">一括登録時の協会：</span>
+                  <select id="bulk-assoc" style="width:auto;">
                     <option value="0">協会なし</option>
                     <option value="1">1. 札幌市</option>
                     <option value="2">2. 北見市</option>
@@ -347,106 +425,82 @@
                     <option value="8">8. 白老町</option>
                   </select>
                 </div>
-                <textarea id="bulk-names" rows="3" placeholder="改行区切りで名前を入力してください&#10;山田 太郎&#10;鈴木 花子" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-white"></textarea>
-                <button onclick="addBulkPlayers()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-4 py-1.5 rounded-lg">まとめて追加する</button>
+                <textarea id="bulk-names" rows="3" placeholder="山田 太郎&#10;鈴木 花子"></textarea>
+                <button onclick="addBulkPlayers()" class="btn btn-slate">まとめて追加する</button>
               </div>
             </details>
           </div>
 
-          <div id="player-list-container" class="space-y-2 max-h-[520px] overflow-y-auto pr-1"></div>
+          <div id="player-list-container" class="player-list"></div>
         </div>
       </div>
     </section>
 
-    <!-- ==================== TAB 2: 対戦表・タイマー・得点 ==================== -->
-    <section id="tab-matches" class="hidden space-y-5">
-
-      <div id="timer-card" class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4 no-print">
-        <div class="flex flex-wrap items-center gap-3">
-          <div class="bg-slate-900 text-white px-4 py-2 rounded-xl text-center min-w-[135px]" id="timer-display-box">
-            <div class="text-[10px] text-slate-400 font-bold tracking-wider">REMAINING TIME</div>
-            <div id="timer-display" class="text-3xl font-black font-mono tracking-tight">50:00</div>
+    <!-- TAB 2: 対戦表・タイマー・得点 -->
+    <section id="tab-matches" class="hidden stack-lg">
+      <div id="timer-card" class="card no-print" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;">
+          <div id="timer-display-box" class="timer-box">
+            <div style="font-size:10px;color:#94a3b8;font-weight:700;">REMAINING</div>
+            <div id="timer-display" class="timer-num">50:00</div>
           </div>
 
-          <div class="space-y-2">
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button onclick="toggleTimer()" id="timer-start-btn" class="bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs md:text-sm px-4 py-2 rounded-lg shadow-sm transition">
-                ▶ スタート
-              </button>
-              <button onclick="resetTimer()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs md:text-sm px-3 py-2 rounded-lg transition">
-                ↺ リセット
-              </button>
-              <div class="flex border border-slate-300 rounded-lg overflow-hidden">
-                <button onclick="changeDuration(50)" id="dur-btn-50" class="px-2.5 py-1.5 text-xs font-bold bg-teal-700 text-white">50分</button>
-                <button onclick="changeDuration(45)" id="dur-btn-45" class="px-2.5 py-1.5 text-xs font-bold bg-white text-slate-600">45分</button>
-              </div>
+          <div class="stack-sm">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
+              <button onclick="toggleTimer()" id="timer-start-btn" class="btn btn-teal">▶ スタート</button>
+              <button onclick="resetTimer()" class="btn btn-light">↺ リセット</button>
+              <button onclick="changeDuration(50)" id="dur-btn-50" class="btn btn-teal" style="padding:6px 10px;font-size:12px;">50分</button>
+              <button onclick="changeDuration(45)" id="dur-btn-45" class="btn btn-light" style="padding:6px 10px;font-size:12px;">45分</button>
             </div>
-
-            <div class="flex flex-wrap items-center gap-1">
-              <span class="text-[11px] font-bold text-slate-500 mr-0.5">時間調整:</span>
-              <button onclick="adjustTimer(-60)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] px-2 py-1 rounded border border-slate-300">-1分</button>
-              <button onclick="adjustTimer(60)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] px-2 py-1 rounded border border-slate-300">+1分</button>
-              <button onclick="adjustTimer(-10)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] px-2 py-1 rounded border border-slate-300">-10秒</button>
-              <button onclick="adjustTimer(10)" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] px-2 py-1 rounded border border-slate-300">+10秒</button>
-              <span class="text-slate-300 mx-1">|</span>
-              <button onclick="playWhistle('warning')" class="bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold text-[11px] px-2 py-1 rounded border border-amber-300">🔊 5分前音</button>
-              <button onclick="playWhistle('end')" class="bg-rose-100 hover:bg-rose-200 text-rose-900 font-bold text-[11px] px-2 py-1 rounded border border-rose-300">🔊 終了音</button>
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;">
+              <button onclick="adjustTimer(-60)" class="btn btn-light" style="padding:4px 8px;font-size:11px;">-1分</button>
+              <button onclick="adjustTimer(60)" class="btn btn-light" style="padding:4px 8px;font-size:11px;">+1分</button>
+              <button onclick="adjustTimer(-10)" class="btn btn-light" style="padding:4px 8px;font-size:11px;">-10秒</button>
+              <button onclick="adjustTimer(10)" class="btn btn-light" style="padding:4px 8px;font-size:11px;">+10秒</button>
+              <button onclick="playWhistle('warning')" class="btn btn-light" style="padding:4px 8px;font-size:11px;background:#fef3c7;border-color:#fcd34d;">🔊 5分前音</button>
+              <button onclick="playWhistle('end')" class="btn btn-light" style="padding:4px 8px;font-size:11px;background:#ffe4e6;border-color:#fda4af;">🔊 終了音</button>
             </div>
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <div id="round-tabs" class="flex flex-wrap gap-1.5"></div>
-        </div>
+        <div id="round-tabs" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
       </div>
 
       <div id="round-complete-banner" class="hidden no-print"></div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 bg-white px-4 py-3 rounded-xl border border-slate-200 shadow-sm">
+      <div class="card" style="padding:14px 18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;">
         <div>
-          <h2 id="current-round-heading" class="text-lg font-black text-slate-800">第1回戦 対戦表</h2>
-          <p id="current-round-sub" class="text-xs text-slate-500">全試合 11点先取制 ／ 勝敗を入力してください</p>
+          <h2 id="current-round-heading" style="margin:0;font-size:18px;font-weight:900;">第1回戦 対戦表</h2>
+          <div id="current-round-sub" style="font-size:12px;color:#64748b;margin-top:2px;">全試合 11点先取制</div>
         </div>
-        <div id="admin-round-controls" class="flex flex-wrap items-center gap-2 no-print">
-          <button onclick="toggleSwapMode()" id="swap-mode-btn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-lg border border-slate-300 transition">
-            🔄 選手手動入替: OFF
-          </button>
-          <button onclick="rerollCurrentRound()" class="bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs px-3 py-2 rounded-lg border border-amber-300 transition">
-            🎲 この回戦を再抽選
-          </button>
+        <div id="admin-round-controls" class="no-print" style="display:flex;flex-wrap:wrap;gap:8px;">
+          <button onclick="toggleSwapMode()" id="swap-mode-btn" class="btn btn-light">🔄 選手手動入替: OFF</button>
+          <button onclick="rerollCurrentRound()" class="btn btn-light" style="background:#fffbeb;border-color:#fcd34d;color:#92400e;">🎲 この回戦を再抽選</button>
         </div>
       </div>
 
-      <div id="resting-players-box" class="hidden bg-slate-100 border border-slate-300 rounded-xl p-3 text-sm"></div>
+      <div id="resting-players-box" class="hidden info-box" style="font-size:13px;"></div>
 
-      <div id="courts-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-
+      <div id="courts-container" class="grid-2"></div>
     </section>
 
-    <!-- ==================== TAB 3: 順位表・PDF保存・大会終了 ==================== -->
-    <section id="tab-standings" class="hidden space-y-5">
-      <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
-
-        <div class="hidden print-only-header border-b-2 border-slate-800 pb-3 mb-4">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-600">めれメレ（ペタンク・メレ大会運営システム）公式記録</span>
-            <span id="print-meta-info" class="text-xs font-bold text-slate-700"></span>
-          </div>
-          <h1 id="print-tournament-title" class="text-2xl font-black text-slate-900 mt-1">大会結果 個人順位表</h1>
+    <!-- TAB 3: 順位表・PDF保存・大会終了 -->
+    <section id="tab-standings" class="hidden stack-lg">
+      <div class="card stack-md">
+        <div class="hidden print-only-header" style="border-bottom:2px solid #0f172a;padding-bottom:10px;margin-bottom:12px;">
+          <div id="print-meta-info" style="font-size:12px;color:#475569;"></div>
+          <h1 id="print-tournament-title" style="margin:4px 0 0;font-size:22px;font-weight:900;">大会結果 個人順位表</h1>
         </div>
 
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 no-print">
+        <div class="no-print" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #f1f5f9;padding-bottom:12px;">
           <div>
-            <div class="flex flex-wrap items-center gap-2">
-              <span class="bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-0.5 rounded">めれメレ 個人成績ランキング</span>
-              <span id="standings-meta-badge" class="text-xs font-bold text-slate-500"></span>
-            </div>
-            <h2 id="standings-title" class="text-xl font-black text-slate-800 mt-1">個人順位表</h2>
-            <p id="standings-rule-desc" class="text-xs text-slate-500 mt-0.5"></p>
+            <div id="standings-meta-badge" style="font-size:12px;font-weight:700;color:#64748b;"></div>
+            <h2 id="standings-title" style="margin:2px 0 0;font-size:20px;font-weight:900;">個人順位表</h2>
+            <div id="standings-rule-desc" style="font-size:12px;color:#64748b;margin-top:2px;"></div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
-            <select id="assoc-filter" onchange="renderStandings()" class="border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold bg-white">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;">
+            <select id="assoc-filter" onchange="renderStandings()" style="width:auto;font-size:12px;font-weight:700;">
               <option value="all">すべての協会を表示</option>
               <option value="1">1. 札幌市のみ</option>
               <option value="2">2. 北見市のみ</option>
@@ -457,167 +511,132 @@
               <option value="7">7. むかわ町のみ</option>
               <option value="8">8. 白老町のみ</option>
             </select>
-            <button onclick="saveAsPdf()" class="bg-rose-600 hover:bg-rose-500 text-white font-black text-xs md:text-sm px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-1.5">
-              <span>📄 PDF保存（印刷）</span>
-            </button>
-            <button onclick="exportCsv()" class="bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs px-3.5 py-2 rounded-lg transition">
-              📥 CSV保存
-            </button>
+            <button onclick="saveAsPdf()" class="btn btn-rose">📄 PDF保存（印刷）</button>
+            <button onclick="exportCsv()" class="btn btn-slate">📥 CSV保存</button>
           </div>
         </div>
 
-        <div id="podium-container" class="grid grid-cols-1 md:grid-cols-3 gap-3 my-5"></div>
+        <div id="podium-container" class="grid-3"></div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead id="standings-thead" class="bg-slate-100 text-slate-700 text-xs uppercase border-y border-slate-200"></thead>
-            <tbody id="standings-tbody" class="divide-y divide-slate-100"></tbody>
+        <div class="table-wrap">
+          <table>
+            <thead id="standings-thead"></thead>
+            <tbody id="standings-tbody"></tbody>
           </table>
         </div>
 
-        <div id="finish-tournament-box" class="mt-8 pt-6 border-t-2 border-dashed border-slate-200 no-print">
-          <div class="bg-slate-50 border border-slate-300 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div id="finish-tournament-box" class="no-print" style="margin-top:24px;padding-top:18px;border-top:2px dashed #e2e8f0;">
+          <div class="info-box" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;">
             <div>
-              <h3 class="text-base font-black text-slate-800">🏁 本日の大会を終了する</h3>
-              <p class="text-xs text-slate-600 mt-1">
-                PDF保存や記録の共有が終わったら「大会終了」を押してください。今回の参加者・対戦データを消去し、次回の大会作成画面へ戻ります。
-              </p>
+              <div style="font-size:15px;font-weight:900;">🏁 本日の大会を終了する</div>
+              <div style="font-size:12px;color:#475569;margin-top:2px;">PDF保存などが済んだら「大会終了」で今回のデータをリセットし、次回作成へ戻れます。</div>
             </div>
-            <button onclick="finishTournament()" class="bg-slate-900 hover:bg-rose-700 text-white font-black text-sm px-6 py-3.5 rounded-xl shadow transition shrink-0">
-              🏁 大会終了（データをリセット）
-            </button>
+            <button onclick="finishTournament()" class="btn btn-slate" style="padding:12px 18px;">🏁 大会終了（データをリセット）</button>
           </div>
         </div>
-
       </div>
     </section>
 
   </main>
 
-  <!-- スマホ用下部固定ナビゲーション（管理者専用） -->
-  <nav id="admin-mobile-nav" class="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 shadow-lg grid grid-cols-4 z-40 no-print">
-    <button onclick="switchTab('guide')" id="mnav-guide" class="py-2.5 flex flex-col items-center justify-center text-[11px] font-bold text-teal-700 bg-teal-50/60">
-      <span class="text-base">📖</span><span>大会作成</span>
-    </button>
-    <button onclick="switchTab('setup')" id="mnav-setup" class="py-2.5 flex flex-col items-center justify-center text-[11px] font-medium text-slate-500">
-      <span class="text-base">⚙️</span><span>設定・選手</span>
-    </button>
-    <button onclick="switchTab('matches')" id="mnav-matches" class="py-2.5 flex flex-col items-center justify-center text-[11px] font-medium text-slate-500">
-      <span class="text-base">🎯</span><span>対戦・タイマー</span>
-    </button>
-    <button onclick="switchTab('standings')" id="mnav-standings" class="py-2.5 flex flex-col items-center justify-center text-[11px] font-medium text-slate-500">
-      <span class="text-base">🏆</span><span>順位・PDF</span>
-    </button>
+  <!-- スマホ下部ナビ -->
+  <nav id="admin-mobile-nav" class="mobile-nav no-print">
+    <button onclick="switchTab('guide')" id="mnav-guide" class="mnav-btn active"><span>📖</span><span>大会作成</span></button>
+    <button onclick="switchTab('setup')" id="mnav-setup" class="mnav-btn"><span>⚙️</span><span>設定・選手</span></button>
+    <button onclick="switchTab('matches')" id="mnav-matches" class="mnav-btn"><span>🎯</span><span>対戦・タイマー</span></button>
+    <button onclick="switchTab('standings')" id="mnav-standings" class="mnav-btn"><span>🏆</span><span>順位・PDF</span></button>
   </nav>
 
-  <!-- ==================== 新規大会作成モーダル ==================== -->
-  <div id="create-modal" class="hidden fixed inset-0 bg-slate-900/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <div>
-          <span class="text-xs font-bold text-teal-700">めれメレ 新規セットアップ</span>
-          <h3 class="text-lg font-black text-slate-800">新しい大会を作成する</h3>
-        </div>
-        <button onclick="closeCreateTournamentModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none">&times;</button>
+  <!-- 新規大会作成モーダル -->
+  <div id="create-modal" class="modal-backdrop hidden">
+    <div class="modal-card stack-md">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
+        <h3 style="margin:0;font-size:18px;font-weight:900;">新しい大会を作成する</h3>
+        <button onclick="closeCreateTournamentModal()" style="background:none;border:none;font-size:24px;color:#64748b;">&times;</button>
       </div>
-
-      <div class="space-y-3">
+      <div>
+        <label class="field-label">大会名 *</label>
+        <input type="text" id="new-t-name" placeholder="例：冬季ペタンク大会" />
+      </div>
+      <div class="grid-2">
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">大会名 <span class="text-rose-500">*</span></label>
-          <input type="text" id="new-t-name" placeholder="例：2026年12月 冬季日曜ペタンク大会 第1節" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm font-bold focus:ring-2 focus:ring-teal-500 outline-none" />
+          <label class="field-label">開催日</label>
+          <input type="date" id="new-t-date" />
         </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">開催日</label>
-            <input type="date" id="new-t-date" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-xs font-bold bg-white" />
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">予定ラウンド数</label>
-            <select id="new-t-rounds" class="w-full border border-slate-300 rounded-lg px-2.5 py-2 text-sm font-bold bg-white">
-              <option value="3">全 3 回戦</option>
-              <option value="4" selected>全 4 回戦</option>
-              <option value="5">全 5 回戦</option>
-              <option value="6">全 6 回戦</option>
-              <option value="7">全 7 回戦</option>
-              <option value="8">全 8 回戦</option>
-            </select>
-          </div>
-        </div>
-
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">順位決定方式</label>
-          <select id="new-t-mode" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm font-bold bg-white">
-            <option value="bhs" selected>勝利数 ＋ BHS方式（標準）</option>
-            <option value="points">カスタムポイント制（直接対決優先）</option>
+          <label class="field-label">予定ラウンド数</label>
+          <select id="new-t-rounds">
+            <option value="3">全 3 回戦</option>
+            <option value="4" selected>全 4 回戦</option>
+            <option value="5">全 5 回戦</option>
+            <option value="6">全 6 回戦</option>
+            <option value="7">全 7 回戦</option>
+            <option value="8">全 8 回戦</option>
           </select>
         </div>
-
-        <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-xs text-amber-900">
-          ※作成すると、前回の対戦結果や選手リストはリセットされ、新しい大会としてスタートします。
-        </div>
       </div>
-
-      <div class="flex gap-2 pt-1">
-        <button onclick="confirmCreateTournament()" class="flex-1 bg-teal-700 hover:bg-teal-600 text-white font-black text-sm py-3 rounded-xl shadow">
-          この内容で大会を作成 ➡
-        </button>
-        <button onclick="closeCreateTournamentModal()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-3 rounded-xl">
-          キャンセル
-        </button>
+      <div>
+        <label class="field-label">順位決定方式</label>
+        <select id="new-t-mode">
+          <option value="bhs" selected>勝利数 ＋ BHS方式（標準）</option>
+          <option value="points">カスタムポイント制（直接対決優先）</option>
+        </select>
+      </div>
+      <div class="warn-box">※作成すると前回の対戦結果や選手リストはリセットされ、新しい大会が始まります。</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="confirmCreateTournament()" class="btn btn-teal" style="flex:1;padding:12px;">この内容で作成 ➡</button>
+        <button onclick="closeCreateTournamentModal()" class="btn btn-light" style="padding:12px;">キャンセル</button>
       </div>
     </div>
   </div>
 
-  <!-- ==================== 閲覧専用QRコード共有モーダル ==================== -->
-  <div id="qr-modal" class="hidden fixed inset-0 bg-slate-900/75 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3.5">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+  <!-- QRコード共有モーダル -->
+  <div id="qr-modal" class="modal-backdrop hidden">
+    <div class="modal-card stack-md">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
         <div>
-          <span class="bg-amber-100 text-amber-900 text-[11px] font-black px-2 py-0.5 rounded">🔒 閲覧専用（QRは1回読むだけ）</span>
-          <h3 id="qr-modal-title" class="text-base font-black text-slate-800 mt-1">大会対戦表・順位表</h3>
+          <span class="badge-amber">🔒 閲覧専用</span>
+          <h3 id="qr-modal-title" style="margin:4px 0 0;font-size:16px;font-weight:900;">大会対戦表・順位表</h3>
         </div>
-        <button onclick="closeQrModal()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold leading-none">&times;</button>
+        <button onclick="closeQrModal()" style="background:none;border:none;font-size:24px;color:#64748b;">&times;</button>
       </div>
-      <div class="flex flex-col items-center justify-center bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-        <div id="qrcode-box" class="bg-white p-2 rounded-xl shadow-sm border border-slate-200"></div>
-        <p id="qr-status-text" class="text-xs text-slate-600 text-center mt-2.5 leading-relaxed">
-          最初に<strong>1回だけ</strong>スマホで読み取ってください。<br/>
-          あとは閲覧者ページの<strong>「🔄 最新情報に更新」</strong>ボタンを押すだけで最新スコア・次の回戦に更新されます！
+      <div class="info-box" style="text-align:center;">
+        <div id="qrcode-box"></div>
+        <p style="font-size:12px;color:#475569;margin:10px 0 0;line-height:1.5;">
+          通信環境がある場所で1回読み取り、閲覧者ページの<strong>「🔄 最新情報に更新」</strong>を押すと最新状態に更新されます。
         </p>
       </div>
-      <div class="flex gap-2">
-        <button onclick="copyShareUrl()" class="flex-1 bg-teal-700 hover:bg-teal-600 text-white font-bold text-xs py-2.5 rounded-lg">閲覧専用URLをコピー</button>
-        <button onclick="closeQrModal()" class="px-4 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs py-2.5 rounded-lg">閉じる</button>
+      <div style="display:flex;gap:8px;">
+        <button onclick="copyShareUrl()" class="btn btn-teal" style="flex:1;">URLをコピー</button>
+        <button onclick="closeQrModal()" class="btn btn-light">閉じる</button>
       </div>
     </div>
   </div>
 
   <!-- 選手戦績詳細モーダル -->
-  <div id="player-detail-modal" class="hidden fixed inset-0 bg-slate-900/70 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-        <h3 id="detail-player-name" class="text-lg font-black text-slate-800">選手戦績詳細</h3>
-        <button onclick="document.getElementById('player-detail-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+  <div id="player-detail-modal" class="modal-backdrop hidden">
+    <div class="modal-card stack-md">
+      <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9;padding-bottom:10px;">
+        <h3 id="detail-player-name" style="margin:0;font-size:17px;font-weight:900;">選手戦績詳細</h3>
+        <button onclick="document.getElementById('player-detail-modal').classList.add('hidden')" style="background:none;border:none;font-size:24px;color:#64748b;">&times;</button>
       </div>
-      <div id="detail-player-body" class="space-y-2 text-sm"></div>
+      <div id="detail-player-body" class="stack-sm" style="font-size:13px;"></div>
     </div>
   </div>
 
   <script>
-    // Firebase Realtime Database 設定（mere-mere-petanque）
     const FIREBASE_DB_URL = "https://mere-mere-petanque-default-rtdb.asia-southeast1.firebasedatabase.app";
 
     const ASSOCIATIONS = {
-      0: { code: 0, name: '無所属', short: 'なし', color: 'bg-slate-100 text-slate-600 border-slate-300' },
-      1: { code: 1, name: '札幌市', short: '1.札幌', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-      2: { code: 2, name: '北見市', short: '2.北見', color: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
-      3: { code: 3, name: '美幌町', short: '3.美幌', color: 'bg-teal-100 text-teal-800 border-teal-300' },
-      4: { code: 4, name: '池田町', short: '4.池田', color: 'bg-purple-100 text-purple-800 border-purple-300' },
-      5: { code: 5, name: '森町', short: '5.森', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
-      6: { code: 6, name: '安平町', short: '6.安平', color: 'bg-amber-100 text-amber-800 border-amber-300' },
-      7: { code: 7, name: 'むかわ町', short: '7.むかわ', color: 'bg-orange-100 text-orange-800 border-orange-300' },
-      8: { code: 8, name: '白老町', short: '8.白老', color: 'bg-rose-100 text-rose-800 border-rose-300' }
+      0: { code: 0, name: '無所属', short: 'なし' },
+      1: { code: 1, name: '札幌市', short: '1.札幌' },
+      2: { code: 2, name: '北見市', short: '2.北見' },
+      3: { code: 3, name: '美幌町', short: '3.美幌' },
+      4: { code: 4, name: '池田町', short: '4.池田' },
+      5: { code: 5, name: '森町', short: '5.森' },
+      6: { code: 6, name: '安平町', short: '6.安平' },
+      7: { code: 7, name: 'むかわ町', short: '7.むかわ' },
+      8: { code: 8, name: '白老町', short: '8.白老' }
     };
 
     const SAMPLE_33 = [
@@ -673,35 +692,17 @@
     let warningPlayed = false;
     let cloudSyncTimer = null;
 
-    const STORAGE_KEY = 'meremere_admin_state_v7';
+    const STORAGE_KEY = 'meremere_offline_state_v1';
 
     window.addEventListener('DOMContentLoaded', async () => {
       buildCourtButtons();
 
-      if (window.location.hash) {
-        if (window.location.hash.startsWith('#room=')) {
-          activeViewerRoomId = decodeURIComponent(window.location.hash.slice(6)).trim();
-          isViewerMode = true;
-          applyViewerShell();
-          await refreshViewerFromCloud(false, true);
-          return;
-        }
-        if (window.location.hash.startsWith('#v=')) {
-          try {
-            const payload = window.location.hash.slice(3);
-            state = decodeCompactState(payload);
-            enterViewerMode('matches');
-            return;
-          } catch (e) {}
-        } else if (window.location.hash.startsWith('#view=') || window.location.hash.startsWith('#share=')) {
-          try {
-            const encoded = window.location.hash.replace(/^#(view|share)=/, '');
-            const jsonStr = decodeURIComponent(escape(atob(encoded)));
-            state = { ...createDefaultState(), ...JSON.parse(jsonStr) };
-            enterViewerMode('matches');
-            return;
-          } catch (e) {}
-        }
+      if (window.location.hash && window.location.hash.startsWith('#room=')) {
+        activeViewerRoomId = decodeURIComponent(window.location.hash.slice(6)).trim();
+        isViewerMode = true;
+        applyViewerShell();
+        await refreshViewerFromCloud(false, true);
+        return;
       }
 
       loadLocalState();
@@ -710,8 +711,10 @@
       renderPlayers();
       updateCourtPreview();
       updateActiveTournamentNotice();
-      syncStateToCloud();
 
+      if (navigator.onLine) {
+        syncStateToCloud();
+      }
       if (state.rounds.length > 0) {
         renderMatches();
         renderStandings();
@@ -724,31 +727,34 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         updateActiveTournamentNotice();
       } catch (e) {}
-      scheduleCloudSync();
+      if (navigator.onLine) {
+        scheduleCloudSync();
+      }
     }
 
     function scheduleCloudSync() {
-      if (isViewerMode) return;
+      if (isViewerMode || !navigator.onLine) return;
       clearTimeout(cloudSyncTimer);
       cloudSyncTimer = setTimeout(() => {
         syncStateToCloud();
-      }, 150);
+      }, 300);
     }
 
     async function syncStateToCloud() {
-      if (isViewerMode || !FIREBASE_DB_URL || !state.roomId) return;
+      if (isViewerMode || !FIREBASE_DB_URL || !state.roomId || !navigator.onLine) return;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
       try {
-        const cleanState = JSON.parse(JSON.stringify(state));
         await fetch(`${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(state.roomId)}.json`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            updatedAt: Date.now(),
-            data: cleanState
-          })
+          body: JSON.stringify({ updatedAt: Date.now(), data: state }),
+          signal: controller.signal
         });
       } catch (e) {
-        console.warn('Firebase同期エラー:', e);
+        // オフライン時は無視してローカル保存のみで続行
+      } finally {
+        clearTimeout(timeoutId);
       }
     }
 
@@ -770,14 +776,10 @@
         clearInterval(viewerAutoTimer);
         viewerAutoTimer = null;
         btn.textContent = '自動更新: OFF';
-        btn.className = 'bg-white/15 hover:bg-white/25 text-white font-bold text-[11px] px-2.5 py-1.5 rounded-lg border border-white/20 transition';
       } else {
         btn.textContent = '自動更新: ON (10秒)';
-        btn.className = 'bg-emerald-500 text-slate-950 font-black text-[11px] px-2.5 py-1.5 rounded-lg shadow transition';
         refreshViewerFromCloud(false, false);
-        viewerAutoTimer = setInterval(() => {
-          refreshViewerFromCloud(false, false);
-        }, 10000);
+        viewerAutoTimer = setInterval(() => refreshViewerFromCloud(false, false), 10000);
       }
     }
 
@@ -785,22 +787,19 @@
       if (!activeViewerRoomId) return;
       const btn = document.getElementById('viewer-refresh-btn');
       const statusEl = document.getElementById('viewer-sync-status');
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span>⏳ 更新中...</span>';
-      }
+      if (btn) { btn.disabled = true; btn.textContent = '⏳ 更新中...'; }
 
       const currentTab = !document.getElementById('tab-standings').classList.contains('hidden') ? 'standings' : 'matches';
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       try {
-        const url = `${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(activeViewerRoomId)}.json?nocache=${Date.now()}`;
-        const res = await fetch(url, {
-          method: 'GET',
-          cache: 'no-store'
+        const res = await fetch(`${FIREBASE_DB_URL}/tournaments/${encodeURIComponent(activeViewerRoomId)}.json?t=${Date.now()}`, {
+          cache: 'no-store',
+          signal: controller.signal
         });
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const payload = await res.json();
-
         if (payload && payload.data) {
           const prevRoundIdx = state.currentRoundIndex;
           const prevRoundCount = state.rounds.length;
@@ -819,26 +818,23 @@
           enterViewerMode(isInitialLoad ? 'matches' : currentTab);
           const now = new Date();
           const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-          if (statusEl) statusEl.textContent = `✅ 最新データ取得済み（${timeStr} 更新）`;
+          if (statusEl) statusEl.textContent = `✅ 最新データ取得済み（${timeStr}）`;
         } else {
-          if (statusEl) statusEl.textContent = '⚠️ まだ大会データがありません（管理者が「閲覧用QR共有」を開くと送信されます）';
-          if (showFeedback) alert('まだ管理者からデータが送信されていません。管理者画面で「閲覧用QR共有」を一度開いてください。');
+          if (statusEl) statusEl.textContent = '⚠️ データがまだ送信されていません';
+          if (showFeedback) alert('まだ管理者からデータが送信されていません。');
         }
       } catch (e) {
-        console.error('更新エラー:', e);
-        if (statusEl) statusEl.textContent = '⚠️ 更新に失敗しました。電波状況を確認してもう一度「最新情報に更新」を押してください';
-        if (showFeedback) alert('最新情報の取得に失敗しました。電波状況を確認して再度押してください。');
+        if (statusEl) statusEl.textContent = '⚠️ 通信できません（オフライン中または電波を確認してください）';
+        if (showFeedback) alert('通信に失敗しました。電波状況を確認して再度押してください。');
       } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.innerHTML = '<span>🔄 最新情報に更新</span>';
-        }
+        clearTimeout(timeoutId);
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 最新情報に更新'; }
       }
     }
 
     function loadLocalState() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('meremere_admin_state_v6');
+        const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('meremere_admin_state_v7') || localStorage.getItem('meremere_admin_state_v6');
         if (raw) {
           state = { ...createDefaultState(), ...JSON.parse(raw) };
           timerSeconds = state.durationMin * 60;
@@ -851,7 +847,7 @@
       if (!box) return;
       if (state.players.length > 0 || state.rounds.length > 0) {
         box.classList.remove('hidden');
-        document.getElementById('active-tournament-label').textContent = `${state.tournamentName}（参加者 ${state.players.length}名）`;
+        document.getElementById('active-tournament-label').textContent = `${state.tournamentName}（${state.players.length}名）`;
       } else {
         box.classList.add('hidden');
       }
@@ -873,14 +869,9 @@
 
     function confirmCreateTournament() {
       const nameInput = document.getElementById('new-t-name').value.trim();
-      if (!nameInput) {
-        alert('大会名を入力してください（例：12月第1日曜 ペタンク大会）');
-        return;
-      }
+      if (!nameInput) { alert('大会名を入力してください'); return; }
       if ((state.players.length > 0 || state.rounds.length > 0) &&
-          !confirm('現在保存されている大会データを消去して、新しい大会を作成しますか？')) {
-        return;
-      }
+          !confirm('現在のデータを消去して新しい大会を作成しますか？')) return;
 
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       state = createDefaultState();
@@ -900,8 +891,7 @@
 
     function finishTournament() {
       if (isViewerMode) return;
-      const msg = `「${state.tournamentName}」を終了して、すべての参加者・対戦結果を消去しますか？\n\n※PDFやCSVの保存が必要な場合は、先に保存してから終了してください。`;
-      if (!confirm(msg)) return;
+      if (!confirm(`「${state.tournamentName}」を終了して、今回の参加者・対戦データを消去しますか？`)) return;
 
       if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
       localStorage.removeItem(STORAGE_KEY);
@@ -911,7 +901,6 @@
       updateCourtPreview();
       updateActiveTournamentNotice();
       resetTimer();
-      syncStateToCloud();
       switchTab('guide');
     }
 
@@ -922,11 +911,7 @@
         const nav = document.getElementById('nav-' + t);
         if (nav) nav.classList.toggle('tab-active', t === tabName);
         const mnav = document.getElementById('mnav-' + t);
-        if (mnav) {
-          mnav.className = t === tabName
-            ? 'py-2.5 flex flex-col items-center justify-center text-[11px] font-bold text-teal-700 bg-teal-50/60'
-            : 'py-2.5 flex flex-col items-center justify-center text-[11px] font-medium text-slate-500';
-        }
+        if (mnav) mnav.classList.toggle('active', t === tabName);
       });
       if (tabName === 'matches') renderMatches();
       if (tabName === 'standings') renderStandings();
@@ -935,9 +920,9 @@
 
     function buildCourtButtons() {
       const container = document.getElementById('court-buttons');
-      let html = `<button onclick="setCourtCount(0)" id="cbtn-0" class="py-1.5 rounded-lg text-xs font-bold border transition bg-teal-700 text-white border-teal-700">自動</button>`;
+      let html = `<button onclick="setCourtCount(0)" id="cbtn-0" class="court-btn active">自動</button>`;
       for (let i = 1; i <= 14; i++) {
-        html += `<button onclick="setCourtCount(${i})" id="cbtn-${i}" class="py-1.5 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-100">${i}面</button>`;
+        html += `<button onclick="setCourtCount(${i})" id="cbtn-${i}" class="court-btn">${i}面</button>`;
       }
       container.innerHTML = html;
     }
@@ -946,10 +931,7 @@
       state.courtCount = num;
       for (let i = 0; i <= 14; i++) {
         const btn = document.getElementById('cbtn-' + i);
-        if (!btn) continue;
-        btn.className = (i === num)
-          ? 'py-1.5 rounded-lg text-xs font-bold border transition bg-teal-700 text-white border-teal-700 shadow-sm'
-          : 'py-1.5 rounded-lg text-xs font-bold border transition bg-white text-slate-700 border-slate-300 hover:bg-slate-100';
+        if (btn) btn.classList.toggle('active', i === num);
       }
       updateCourtPreview();
       saveLocalState();
@@ -989,15 +971,11 @@
       if (c23 > 0) parts.push(`変則(2×3)×${c23}面`);
       if (c22 > 0) parts.push(`ダブルス(2×2)×${c22}面`);
       const totalCourts = c33 + c23 + c22;
-      return {
-        valid: true, c33, c23, c22, rest, totalCourts,
-        msg: `計${totalCourts}面使用：${parts.join(' ＋ ')} ／ 待機 ${rest}名`
-      };
+      return { valid: true, c33, c23, c22, rest, totalCourts, msg: `計${totalCourts}面使用：${parts.join(' ＋ ')} ／ 待機 ${rest}名` };
     }
 
     function updateCourtPreview() {
-      const res = calculateCourtAllocation(state.players.length, state.courtCount);
-      document.getElementById('court-preview-box').textContent = res.msg;
+      document.getElementById('court-preview-box').textContent = calculateCourtAllocation(state.players.length, state.courtCount).msg;
     }
 
     function updateConfig() {
@@ -1079,11 +1057,7 @@
 
     function setPlayerAssoc(playerId, assocCode) {
       const p = state.players.find(x => x.id === playerId);
-      if (p) {
-        p.assoc = assocCode;
-        renderPlayers();
-        saveLocalState();
-      }
+      if (p) { p.assoc = assocCode; renderPlayers(); saveLocalState(); }
     }
 
     function removePlayer(playerId) {
@@ -1097,37 +1071,32 @@
       document.getElementById('player-count').textContent = state.players.length;
       const container = document.getElementById('player-list-container');
       if (state.players.length === 0) {
-        container.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">まだ参加者が登録されていません。<br/>上のフォームから追加するか「サンプル33名読込」をお試しください。</div>`;
+        container.innerHTML = `<div style="text-align:center;padding:32px 12px;color:#94a3b8;font-size:13px;">まだ参加者が登録されていません。</div>`;
         return;
       }
       container.innerHTML = state.players.map((p, idx) => {
-        const assocButtons = Object.values(ASSOCIATIONS).filter(a => a.code > 0).map(a => {
+        const chips = Object.values(ASSOCIATIONS).filter(a => a.code > 0).map(a => {
           const active = p.assoc === a.code;
-          return `<button onclick="setPlayerAssoc('${p.id}', ${a.code})" class="px-2 py-0.5 rounded text-[11px] font-bold border transition ${active ? a.color + ' ring-1 ring-offset-1 ring-slate-400' : 'bg-white text-slate-400 border-slate-200 hover:text-slate-700'}">${a.short}</button>`;
+          return `<button onclick="setPlayerAssoc('${p.id}', ${a.code})" class="assoc-chip ${active ? 'active' : ''}">${a.short}</button>`;
         }).join('');
         return `
-          <div class="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white transition">
-            <div class="flex items-center gap-2 min-w-[140px]">
-              <span class="text-xs font-mono font-bold text-slate-400 w-6">${idx + 1}.</span>
-              <span class="font-bold text-sm text-slate-800">${escapeHtml(p.name)}</span>
+          <div class="player-row">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:12px;font-weight:700;color:#94a3b8;width:24px;">${idx + 1}.</span>
+              <span style="font-weight:800;font-size:14px;">${escapeHtml(p.name)}</span>
             </div>
-            <div class="flex flex-wrap items-center gap-1">
-              ${assocButtons}
-              <button onclick="removePlayer('${p.id}')" class="ml-1 text-slate-400 hover:text-rose-600 font-bold px-1.5 text-base" title="削除">&times;</button>
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              ${chips}
+              <button onclick="removePlayer('${p.id}')" style="background:none;border:none;color:#94a3b8;font-size:18px;font-weight:700;padding:0 4px;">&times;</button>
             </div>
-          </div>
-        `;
+          </div>`;
       }).join('');
     }
 
     function startFirstRound() {
-      if (state.players.length < 4) {
-        alert('試合を行うには4名以上の参加者を登録してください。');
-        return;
-      }
-      if (state.rounds.length > 0 && !confirm('すでに作成済みの対戦表をリセットして第1回戦から作り直しますか？')) {
-        switchTab('matches');
-        return;
+      if (state.players.length < 4) { alert('4名以上の参加者を登録してください。'); return; }
+      if (state.rounds.length > 0 && !confirm('作成済みの対戦表をリセットして第1回戦から作り直しますか？')) {
+        switchTab('matches'); return;
       }
       state.rounds = [];
       generateNextRound();
@@ -1138,27 +1107,17 @@
       const alloc = calculateCourtAllocation(state.players.length, state.courtCount);
       if (!alloc.valid) { alert(alloc.msg); return; }
 
-      const restCount = {};
-      const partnerCount = {};
-      const oppCount = {};
-      const courtHistory = {};
-
+      const restCount = {}, partnerCount = {}, oppCount = {}, courtHistory = {};
       state.players.forEach(p => {
-        restCount[p.id] = 0;
-        partnerCount[p.id] = {};
-        oppCount[p.id] = {};
-        courtHistory[p.id] = {};
+        restCount[p.id] = 0; partnerCount[p.id] = {}; oppCount[p.id] = {}; courtHistory[p.id] = {};
       });
 
       state.rounds.forEach(r => {
         r.resting.forEach(id => { if (restCount[id] !== undefined) restCount[id]++; });
         r.courts.forEach(c => {
           const cNum = c.courtNum;
-          const allInCourt = [...c.red, ...c.blue];
-          allInCourt.forEach(pid => {
-            if (courtHistory[pid]) {
-              courtHistory[pid][cNum] = (courtHistory[pid][cNum] || 0) + 1;
-            }
+          [...c.red, ...c.blue].forEach(pid => {
+            if (courtHistory[pid]) courtHistory[pid][cNum] = (courtHistory[pid][cNum] || 0) + 1;
           });
           c.red.forEach(a => {
             c.red.forEach(b => { if (a !== b && partnerCount[a]) partnerCount[a][b] = (partnerCount[a][b] || 0) + 1; });
@@ -1172,11 +1131,9 @@
       });
 
       const lastResting = state.rounds.length > 0 ? new Set(state.rounds[state.rounds.length - 1].resting) : new Set();
-      let bestConfig = null;
-      let bestPenalty = Infinity;
+      let bestConfig = null, bestPenalty = Infinity;
 
-      const attempts = 2500;
-      for (let attempt = 0; attempt < attempts; attempt++) {
+      for (let attempt = 0; attempt < 2500; attempt++) {
         const sorted = [...state.players].sort((a, b) => {
           const ra = restCount[a.id] + (lastResting.has(a.id) ? 0.5 : 0);
           const rb = restCount[b.id] + (lastResting.has(b.id) ? 0.5 : 0);
@@ -1193,9 +1150,7 @@
           [active[i], active[j]] = [active[j], active[i]];
         }
 
-        let idx = 0;
-        let penalty = 0;
-        let courtNum = 1;
+        let idx = 0, penalty = 0, courtNum = 1;
         const courts = [];
 
         const buildCourt = (type, rSize, bSize) => {
@@ -1204,26 +1159,12 @@
           const blue = active.slice(idx, idx + bSize).map(p => p.id); idx += bSize;
 
           red.forEach(a => {
-            red.forEach(b => {
-              if (a !== b) {
-                const pCnt = partnerCount[a][b] || 0;
-                if (pCnt > 0) penalty += pCnt * pCnt * 220;
-              }
-            });
-            blue.forEach(b => {
-              const oCnt = oppCount[a][b] || 0;
-              if (oCnt > 0) penalty += oCnt * oCnt * 90;
-            });
+            red.forEach(b => { if (a !== b && (partnerCount[a][b] || 0) > 0) penalty += partnerCount[a][b] ** 2 * 220; });
+            blue.forEach(b => { if ((oppCount[a][b] || 0) > 0) penalty += oppCount[a][b] ** 2 * 90; });
           });
           blue.forEach(a => {
-            blue.forEach(b => {
-              if (a !== b) {
-                const pCnt = partnerCount[a][b] || 0;
-                if (pCnt > 0) penalty += pCnt * pCnt * 220;
-              }
-            });
+            blue.forEach(b => { if (a !== b && (partnerCount[a][b] || 0) > 0) penalty += partnerCount[a][b] ** 2 * 220; });
           });
-
           [...red, ...blue].forEach(pid => {
             const cCnt = (courtHistory[pid] && courtHistory[pid][currentCourtNum]) || 0;
             if (cCnt > 0) penalty += cCnt * cCnt * 140;
@@ -1254,64 +1195,35 @@
     function rerollCurrentRound() {
       if (isViewerMode || state.rounds.length === 0) return;
       const r = state.rounds[state.currentRoundIndex];
-      if (r.courts.some(c => c.scoreRed !== null || c.scoreBlue !== null) && !confirm('すでに入力されているこの回戦のスコアがクリアされます。再抽選しますか？')) return;
-      if (state.currentRoundIndex !== state.rounds.length - 1) {
-        alert('再抽選できるのは最新の回戦のみです。');
-        return;
-      }
+      if (r.courts.some(c => c.scoreRed !== null || c.scoreBlue !== null) && !confirm('入力済みのこの回戦のスコアが消えます。再抽選しますか？')) return;
+      if (state.currentRoundIndex !== state.rounds.length - 1) { alert('再抽選できるのは最新の回戦のみです。'); return; }
       state.rounds.pop();
       generateNextRound();
     }
 
     function getPlayerBadgeHtml(playerId) {
       const p = state.players.find(x => x.id === playerId);
-      if (!p) return '<span class="text-slate-400">不明</span>';
+      if (!p) return '<span>不明</span>';
       const assoc = ASSOCIATIONS[p.assoc] || ASSOCIATIONS[0];
-      const isHighlighted = viewerHighlightId && viewerHighlightId === p.id;
-      return `
-        <span class="inline-flex items-center gap-1.5 ${isHighlighted ? 'bg-amber-300 text-slate-950 px-2 py-0.5 rounded-md ring-2 ring-amber-500 font-black' : ''}">
-          ${assoc.code > 0 ? `<span class="text-[10px] font-bold px-1.5 py-0.2 rounded border ${assoc.color}">${assoc.short}</span>` : ''}
-          <span class="font-bold text-slate-800 text-sm">${escapeHtml(p.name)}</span>
-        </span>
-      `;
+      const hi = viewerHighlightId && viewerHighlightId === p.id ? 'highlight-me' : '';
+      return `<span class="${hi}" style="display:inline-flex;align-items:center;gap:6px;">${assoc.code > 0 ? `<span style="font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;background:#e2e8f0;color:#334155;">${assoc.short}</span>` : ''}<span style="font-weight:700;font-size:14px;">${escapeHtml(p.name)}</span></span>`;
     }
 
     function renderMatches() {
       if (state.rounds.length === 0) {
-        document.getElementById('courts-container').innerHTML = `
-          <div class="col-span-full bg-white rounded-2xl p-8 text-center border border-slate-200 space-y-3">
-            <div class="text-slate-500 text-sm">まだ対戦表が作成されていません。</div>
-            ${!isViewerMode ? `<button onclick="switchTab('setup')" class="bg-teal-700 text-white font-bold text-sm px-5 py-2.5 rounded-xl">設定画面へ戻る</button>` : ''}
-          </div>`;
+        document.getElementById('courts-container').innerHTML = `<div class="card" style="grid-column:1/-1;text-align:center;padding:32px;color:#64748b;">まだ対戦表がありません。</div>`;
         return;
       }
 
       document.getElementById('round-tabs').innerHTML = state.rounds.map((r, idx) => {
         const active = idx === state.currentRoundIndex;
         const done = r.courts.every(c => c.scoreRed !== null && c.scoreBlue !== null);
-        return `
-          <button onclick="selectRound(${idx})" class="px-3 py-1.5 rounded-lg text-xs font-bold border transition ${active ? 'bg-teal-700 text-white border-teal-700 shadow-sm' : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'}">
-            第${r.roundNum}回戦 ${done ? '✅' : ''}
-          </button>
-        `;
+        return `<button onclick="selectRound(${idx})" class="btn ${active ? 'btn-teal' : 'btn-light'}" style="padding:6px 12px;font-size:12px;">第${r.roundNum}回戦 ${done ? '✅' : ''}</button>`;
       }).join('');
 
       const round = state.rounds[state.currentRoundIndex];
       document.getElementById('current-round-heading').textContent = `第${round.roundNum}回戦 対戦表（全${state.plannedRounds}回戦予定）`;
-      document.getElementById('current-round-sub').textContent = isViewerMode
-        ? `閲覧専用モード ／ 制限時間 ${state.durationMin}分・11点先取制`
-        : `全試合 11点先取 ／ 制限時間 ${state.durationMin}分`;
-
-      if (isViewerMode) {
-        document.getElementById('current-round-sub').innerHTML = `
-          <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
-            ${state.rounds.map((r, idx) => `
-              <button onclick="selectRound(${idx})" class="px-3 py-1 rounded-lg text-xs font-bold border ${idx === state.currentRoundIndex ? 'bg-teal-700 text-white border-teal-700' : 'bg-slate-100 text-slate-700 border-slate-300'}">
-                第${r.roundNum}回戦
-              </button>
-            `).join('')}
-          </div>`;
-      }
+      document.getElementById('current-round-sub').textContent = `全試合 11点先取 ／ 制限時間 ${state.durationMin}分`;
 
       const isCurrentDone = round.courts.every(c => c.scoreRed !== null && c.scoreBlue !== null);
       const isAllPlannedDone = state.rounds.length >= state.plannedRounds &&
@@ -1320,30 +1232,11 @@
       const bannerEl = document.getElementById('round-complete-banner');
       if (!isViewerMode && isAllPlannedDone) {
         bannerEl.classList.remove('hidden');
-        bannerEl.innerHTML = `
-          <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 rounded-2xl p-4 md:p-5 shadow-lg flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-black uppercase tracking-wider">ALL ROUNDS COMPLETED</div>
-              <div class="text-lg md:text-xl font-black">🎉 全${state.plannedRounds}回戦がすべて終了しました！</div>
-            </div>
-            <button onclick="switchTab('standings')" class="bg-slate-900 hover:bg-slate-800 text-white font-black text-sm md:text-base px-6 py-3 rounded-xl shadow transition">
-              🏆 最終成績発表・PDF保存へ ➡
-            </button>
-          </div>`;
+        bannerEl.innerHTML = `<div class="warn-box" style="background:#fef3c7;border-color:#f59e0b;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:14px;"><div style="font-size:15px;font-weight:900;">🎉 全${state.plannedRounds}回戦がすべて終了しました！</div><button onclick="switchTab('standings')" class="btn btn-slate">🏆 最終成績発表・PDF保存へ ➡</button></div>`;
       } else if (!isViewerMode && isCurrentDone) {
         bannerEl.classList.remove('hidden');
-        const hasNextAlready = state.currentRoundIndex < state.rounds.length - 1;
-        bannerEl.innerHTML = `
-          <div class="bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl p-4 shadow-md flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div class="text-xs font-bold text-emerald-100">ROUND ${round.roundNum} COMPLETED</div>
-              <div class="text-base md:text-lg font-black">✅ 第${round.roundNum}回戦のスコア入力が完了しました！</div>
-            </div>
-            ${hasNextAlready
-              ? `<button onclick="selectRound(${state.currentRoundIndex + 1})" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-sm px-5 py-3 rounded-xl shadow transition">➡ 第${round.roundNum + 1}回戦へ進む</button>`
-              : `<button onclick="generateNextRound()" class="bg-amber-400 hover:bg-amber-300 text-slate-900 font-black text-sm px-5 py-3 rounded-xl shadow transition">➡ 第${round.roundNum + 1}回戦の組み合わせを作って進む</button>`
-            }
-          </div>`;
+        const hasNext = state.currentRoundIndex < state.rounds.length - 1;
+        bannerEl.innerHTML = `<div class="preview-box" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:14px;"><div style="font-size:15px;font-weight:900;">✅ 第${round.roundNum}回戦のスコア入力が完了しました！</div>${hasNext ? `<button onclick="selectRound(${state.currentRoundIndex + 1})" class="btn btn-amber">➡ 第${round.roundNum + 1}回戦へ進む</button>` : `<button onclick="generateNextRound()" class="btn btn-amber">➡ 第${round.roundNum + 1}回戦の組み合わせを作って進む</button>`}</div>`;
       } else {
         bannerEl.classList.add('hidden');
       }
@@ -1351,8 +1244,7 @@
       const restBox = document.getElementById('resting-players-box');
       if (round.resting.length > 0) {
         restBox.classList.remove('hidden');
-        restBox.innerHTML = `<span class="font-bold text-slate-700 mr-2">☕ 第${round.roundNum}回戦 待機（休み）：</span>` +
-          round.resting.map(id => getPlayerBadgeHtml(id)).join(' / ');
+        restBox.innerHTML = `<strong>☕ 第${round.roundNum}回戦 待機：</strong>` + round.resting.map(id => getPlayerBadgeHtml(id)).join(' / ');
       } else {
         restBox.classList.add('hidden');
       }
@@ -1365,73 +1257,33 @@
         const redWin = hasBoth && Number(c.scoreRed) > Number(c.scoreBlue);
         const blueWin = hasBoth && Number(c.scoreBlue) > Number(c.scoreRed);
 
-        const renderTeamSlots = (teamKey, ids) => ids.map((pid, sIdx) => {
-          const isSwapTarget = !isViewerMode && swapMode && swapSelected && swapSelected.courtIdx === cIdx && swapSelected.team === teamKey && swapSelected.slotIdx === sIdx;
-          return `
-            <div onclick="handleSlotClick(${cIdx}, '${teamKey}', ${sIdx}, '${pid}')"
-                 class="py-1 px-2 rounded-lg transition ${(!isViewerMode && swapMode) ? 'cursor-pointer border border-dashed border-amber-400 hover:bg-amber-50' : ''} ${isSwapTarget ? 'bg-amber-200 ring-2 ring-amber-500' : ''}">
-              ${getPlayerBadgeHtml(pid)}
-            </div>`;
+        const renderSlots = (teamKey, ids) => ids.map((pid, sIdx) => {
+          const sel = !isViewerMode && swapMode && swapSelected && swapSelected.courtIdx === cIdx && swapSelected.team === teamKey && swapSelected.slotIdx === sIdx;
+          return `<div onclick="handleSlotClick(${cIdx}, '${teamKey}', ${sIdx}, '${pid}')" style="padding:4px 6px;border-radius:6px;${sel ? 'background:#fde047;' : ''}">${getPlayerBadgeHtml(pid)}</div>`;
         }).join('');
 
-        const viewerScoreText = (!hasRed && !hasBlue)
-          ? `<span class="text-xs font-bold text-slate-400">試合中（未入力）</span>`
-          : `<span class="font-black text-xl ${redWin ? 'text-rose-600' : 'text-slate-800'}">${hasRed ? c.scoreRed : '-'}</span>
-             <span class="font-bold text-slate-400">-</span>
-             <span class="font-black text-xl ${blueWin ? 'text-sky-600' : 'text-slate-800'}">${hasBlue ? c.scoreBlue : '-'}</span>`;
-
-        const footerHtml = isViewerMode
-          ? `<div class="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex items-center justify-center gap-3">
-               <span class="text-xs font-bold text-slate-500">スコア</span>
-               ${viewerScoreText}
-             </div>`
-          : `<div class="bg-slate-50 px-4 py-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-               <button onclick="setQuickWin(${cIdx}, 'red')" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition">
-                 赤 11点勝利
-               </button>
-               <div class="flex items-center gap-1.5">
-                 <input type="number" min="0" max="11" value="${hasRed ? c.scoreRed : ''}" placeholder="-"
-                        oninput="updateScore(${cIdx}, 'red', this.value, false)"
-                        onchange="updateScore(${cIdx}, 'red', this.value, true)"
-                        class="w-12 text-center font-black text-base border border-slate-300 rounded-lg py-1 bg-white" />
-                 <span class="font-bold text-slate-400">-</span>
-                 <input type="number" min="0" max="11" value="${hasBlue ? c.scoreBlue : ''}" placeholder="-"
-                        oninput="updateScore(${cIdx}, 'blue', this.value, false)"
-                        onchange="updateScore(${cIdx}, 'blue', this.value, true)"
-                        class="w-12 text-center font-black text-base border border-slate-300 rounded-lg py-1 bg-white" />
-               </div>
-               <button onclick="setQuickWin(${cIdx}, 'blue')" class="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition">
-                 青 11点勝利
-               </button>
-             </div>`;
+        const footHtml = isViewerMode
+          ? `<div class="court-foot" style="justify-content:center;gap:10px;font-size:18px;font-weight:900;"><span>${hasRed ? c.scoreRed : '-'}</span><span>-</span><span>${hasBlue ? c.scoreBlue : '-'}</span></div>`
+          : `<div class="court-foot"><button onclick="setQuickWin(${cIdx}, 'red')" class="btn btn-rose" style="padding:6px 10px;font-size:12px;">赤 11点勝利</button><div style="display:flex;align-items:center;gap:6px;"><input type="number" min="0" max="11" class="score-input" value="${hasRed ? c.scoreRed : ''}" placeholder="-" oninput="updateScore(${cIdx}, 'red', this.value, false)" onchange="updateScore(${cIdx}, 'red', this.value, true)" /><span>-</span><input type="number" min="0" max="11" class="score-input" value="${hasBlue ? c.scoreBlue : ''}" placeholder="-" oninput="updateScore(${cIdx}, 'blue', this.value, false)" onchange="updateScore(${cIdx}, 'blue', this.value, true)" /></div><button onclick="setQuickWin(${cIdx}, 'blue')" class="btn btn-sky" style="padding:6px 10px;font-size:12px;">青 11点勝利</button></div>`;
 
         return `
-          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden card-shadow">
-            <div class="bg-slate-800 text-white px-4 py-2 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="font-black text-base">第 ${c.courtNum} コート</span>
-                <span class="text-xs font-bold px-2 py-0.5 rounded ${is2x3 ? 'bg-amber-400 text-slate-900' : 'bg-white/20 text-white'}">${c.type}</span>
-              </div>
-              ${is2x3 ? `<span class="text-[11px] text-amber-300 font-bold">持ち球目安：2人側=3球 / 3人側=2球</span>` : `<span class="text-[11px] text-slate-300">11点先取</span>`}
+          <div class="court-card">
+            <div class="court-head">
+              <span>第 ${c.courtNum} コート（${c.type}）</span>
+              <span style="font-size:11px;color:#fde047;">${is2x3 ? '2人=3球 / 3人=2球' : '11点先取'}</span>
             </div>
-            <div class="p-4 grid grid-cols-11 gap-2 items-center">
-              <div class="col-span-5 rounded-xl p-2.5 border ${redWin ? 'bg-rose-50 border-rose-400 ring-1 ring-rose-300' : 'bg-rose-50/40 border-rose-200'}">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-black text-rose-700">🔴 赤チーム (${c.red.length}名)</span>
-                  ${redWin ? '<span class="text-[10px] bg-rose-600 text-white font-bold px-1.5 py-0.5 rounded">WIN</span>' : ''}
-                </div>
-                <div class="space-y-1">${renderTeamSlots('red', c.red)}</div>
+            <div class="court-body">
+              <div class="team-red ${redWin ? 'win' : ''}">
+                <div style="font-size:12px;font-weight:900;color:#be123c;margin-bottom:4px;">🔴 赤 (${c.red.length}名)</div>
+                ${renderSlots('red', c.red)}
               </div>
-              <div class="col-span-1 text-center font-black text-slate-400 text-xs">VS</div>
-              <div class="col-span-5 rounded-xl p-2.5 border ${blueWin ? 'bg-sky-50 border-sky-400 ring-1 ring-sky-300' : 'bg-sky-50/40 border-sky-200'}">
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-black text-sky-700">🔵 青チーム (${c.blue.length}名)</span>
-                  ${blueWin ? '<span class="text-[10px] bg-sky-600 text-white font-bold px-1.5 py-0.5 rounded">WIN</span>' : ''}
-                </div>
-                <div class="space-y-1">${renderTeamSlots('blue', c.blue)}</div>
+              <div style="text-align:center;font-size:12px;font-weight:900;color:#94a3b8;">VS</div>
+              <div class="team-blue ${blueWin ? 'win' : ''}">
+                <div style="font-size:12px;font-weight:900;color:#0369a1;margin-bottom:4px;">🔵 青 (${c.blue.length}名)</div>
+                ${renderSlots('blue', c.blue)}
               </div>
             </div>
-            ${footerHtml}
+            ${footHtml}
           </div>`;
       }).join('');
     }
@@ -1453,20 +1305,16 @@
       const num = trimmed === '' ? null : Math.max(0, Math.min(11, parseInt(trimmed, 10)));
       if (side === 'red') c.scoreRed = Number.isNaN(num) ? null : num;
       else c.scoreBlue = Number.isNaN(num) ? null : num;
-      saveLocalState();
-      renderStandings();
+      saveLocalState(); renderStandings();
       if (shouldRerender) renderMatches();
     }
 
     function toggleSwapMode() {
       if (isViewerMode) return;
-      swapMode = !swapMode;
-      swapSelected = null;
+      swapMode = !swapMode; swapSelected = null;
       const btn = document.getElementById('swap-mode-btn');
-      btn.textContent = swapMode ? '🔄 選手手動入替: ON (2名選択)' : '🔄 選手手動入替: OFF';
-      btn.className = swapMode
-        ? 'bg-amber-400 text-slate-900 font-black text-xs px-3 py-2 rounded-lg shadow-sm transition'
-        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs px-3 py-2 rounded-lg border border-slate-300 transition';
+      btn.textContent = swapMode ? '🔄 選手手動入替: ON' : '🔄 選手手動入替: OFF';
+      btn.className = swapMode ? 'btn btn-amber' : 'btn btn-light';
       renderMatches();
     }
 
@@ -1488,7 +1336,6 @@
       state.players.forEach(p => {
         stats[p.id] = { player: p, played: 0, wins: 0, draws: 0, losses: 0, points: 0, pf: 0, pa: 0, diff: 0, bhs: 0, involvedIds: [], h2h: {}, history: [], tieReason: '' };
       });
-
       state.rounds.forEach(r => {
         r.courts.forEach(c => {
           if (c.scoreRed === null || c.scoreBlue === null) return;
@@ -1496,8 +1343,7 @@
           const result = rScore > bScore ? 'red' : (bScore > rScore ? 'blue' : 'draw');
           const recordSide = (myIds, oppIds, myScore, oppScore, outcome) => {
             myIds.forEach(pid => {
-              const s = stats[pid];
-              if (!s) return;
+              const s = stats[pid]; if (!s) return;
               s.played++; s.pf += myScore; s.pa += oppScore; s.diff = s.pf - s.pa;
               myIds.forEach(ally => { if (ally !== pid) s.involvedIds.push(ally); });
               oppIds.forEach(opp => {
@@ -1516,29 +1362,18 @@
           recordSide(c.blue, c.red, bScore, rScore, result === 'blue' ? 'win' : (result === 'red' ? 'loss' : 'draw'));
         });
       });
-
       Object.values(stats).forEach(s => {
         s.bhs = s.involvedIds.reduce((sum, id) => sum + (stats[id] ? stats[id].wins : 0), 0);
       });
-
       const list = Object.values(stats);
       if (state.rankingMode === 'bhs') {
-        list.sort((a, b) => {
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          if (b.bhs !== a.bhs) { a.tieReason = `BHS (${a.bhs})`; b.tieReason = `BHS (${b.bhs})`; return b.bhs - a.bhs; }
-          if (b.diff !== a.diff) { a.tieReason = `得失差 (${a.diff >= 0 ? '+' : ''}${a.diff})`; b.tieReason = `得失差 (${b.diff >= 0 ? '+' : ''}${b.diff})`; return b.diff - a.diff; }
-          return b.pf - a.pf;
-        });
+        list.sort((a, b) => (b.wins - a.wins) || (b.bhs - a.bhs) || (b.diff - a.diff) || (b.pf - a.pf));
       } else {
         list.sort((a, b) => {
           if (b.points !== a.points) return b.points - a.points;
           const h2hA = a.h2h[b.player.id];
-          if (h2hA && h2hA.wins !== h2hA.losses) {
-            if (h2hA.wins > h2hA.losses) { a.tieReason = `直接対決勝ち (vs ${b.player.name})`; return -1; }
-            else { b.tieReason = `直接対決勝ち (vs ${a.player.name})`; return 1; }
-          }
-          if (b.diff !== a.diff) { a.tieReason = `得失差 (${a.diff >= 0 ? '+' : ''}${a.diff})`; b.tieReason = `得失差 (${b.diff >= 0 ? '+' : ''}${b.diff})`; return b.diff - a.diff; }
-          return b.pf - a.pf;
+          if (h2hA && h2hA.wins !== h2hA.losses) return h2hA.wins > h2hA.losses ? -1 : 1;
+          return (b.diff - a.diff) || (b.pf - a.pf);
         });
       }
       return list;
@@ -1549,47 +1384,35 @@
       const filter = document.getElementById('assoc-filter').value;
       const filtered = filter === 'all' ? list : list.filter(s => String(s.player.assoc) === filter);
       const dateStr = state.tournamentDate || getTodayStr();
-      const metaText = `開催日: ${dateStr} ／ 出場者数: ${state.players.length}名 ／ 全${state.plannedRounds}回戦`;
+      const metaText = `開催日: ${dateStr} ／ 出場: ${state.players.length}名 ／ 全${state.plannedRounds}回戦`;
 
       document.getElementById('standings-meta-badge').textContent = metaText;
       document.getElementById('standings-title').textContent = `${state.tournamentName} - 個人順位表`;
       document.getElementById('print-tournament-title').textContent = `${state.tournamentName} 最終順位表`;
       document.getElementById('print-meta-info').textContent = metaText;
-
       document.getElementById('standings-rule-desc').textContent = state.rankingMode === 'bhs'
-        ? '順位決定基準：①勝利数 → ②BHS（ソルコフ） → ③得失点差 → ④総得点（選手名クリックで対戦履歴表示）'
-        : `順位決定基準：①累計ポイント（勝${state.ptWin}/分${state.ptDraw}/負${state.ptLoss}） → ②直接対決 → ③得失点差 → ④総得点`;
+        ? '①勝利数 → ②BHS → ③得失点差 → ④総得点（選手タップで履歴）'
+        : `①累計pt(勝${state.ptWin}/分${state.ptDraw}/負${state.ptLoss}) → ②直接対決 → ③得失点差 → ④総得点`;
 
-      const medals = ['🥇 優勝（第1位）', '🥈 準優勝（第2位）', '🥉 第3位'];
-      const medalStyles = ['bg-gradient-to-br from-amber-50 to-yellow-100 border-amber-300', 'bg-gradient-to-br from-slate-50 to-slate-200 border-slate-300', 'bg-gradient-to-br from-orange-50 to-amber-100/60 border-orange-300'];
-      document.getElementById('podium-container').innerHTML = list.slice(0, 3).map((s, i) => {
-        const assoc = ASSOCIATIONS[s.player.assoc] || ASSOCIATIONS[0];
-        const mainStat = state.rankingMode === 'bhs'
-          ? `${s.wins}勝 (BHS: ${s.bhs} / 得失: ${s.diff >= 0 ? '+' : ''}${s.diff})`
-          : `${s.points}pt (${s.wins}勝${s.draws}分${s.losses}敗 / 得失: ${s.diff >= 0 ? '+' : ''}${s.diff})`;
-        return `
-          <div class="p-4 rounded-xl border ${medalStyles[i]} shadow-sm card-shadow">
-            <div class="text-xs font-black text-slate-700">${medals[i]}</div>
-            <div class="text-lg font-black text-slate-900 mt-1 flex items-center gap-2">
-              <span>${escapeHtml(s.player.name)}</span>
-              ${assoc.code > 0 ? `<span class="text-[10px] px-1.5 py-0.5 rounded border ${assoc.color}">${assoc.short}</span>` : ''}
-            </div>
-            <div class="text-xs font-bold text-slate-600 mt-1">${mainStat}</div>
-          </div>`;
-      }).join('');
+      const medals = ['🥇 優勝', '🥈 準優勝', '🥉 第3位'];
+      document.getElementById('podium-container').innerHTML = list.slice(0, 3).map((s, i) => `
+        <div class="info-box">
+          <div style="font-size:12px;font-weight:900;color:#0f766e;">${medals[i]}</div>
+          <div style="font-size:17px;font-weight:900;margin:4px 0;">${escapeHtml(s.player.name)}</div>
+          <div style="font-size:12px;color:#475569;">${state.rankingMode === 'bhs' ? `${s.wins}勝 / BHS:${s.bhs} / 得失:${s.diff >= 0 ? '+' : ''}${s.diff}` : `${s.points}pt / ${s.wins}勝${s.draws}分${s.losses}敗`}</div>
+        </div>`).join('');
 
       document.getElementById('standings-thead').innerHTML = state.rankingMode === 'bhs'
-        ? `<tr><th class="py-2.5 px-3">順位</th><th class="py-2.5 px-3">選手名 / 協会</th><th class="py-2.5 px-2 text-center">試合</th><th class="py-2.5 px-2 text-center">勝</th><th class="py-2.5 px-2 text-center">敗</th><th class="py-2.5 px-2 text-center bg-teal-50 text-teal-900">BHS</th><th class="py-2.5 px-2 text-center">得失差</th><th class="py-2.5 px-2 text-center">総得点</th><th class="py-2.5 px-3">判定備考</th></tr>`
-        : `<tr><th class="py-2.5 px-3">順位</th><th class="py-2.5 px-3">選手名 / 協会</th><th class="py-2.5 px-2 text-center bg-amber-50 text-amber-900">累計pt</th><th class="py-2.5 px-2 text-center">勝</th><th class="py-2.5 px-2 text-center">分</th><th class="py-2.5 px-2 text-center">敗</th><th class="py-2.5 px-2 text-center">得失差</th><th class="py-2.5 px-2 text-center">総得点</th><th class="py-2.5 px-3">判定備考</th></tr>`;
+        ? `<tr><th>順位</th><th>選手名</th><th class="text-center">試合</th><th class="text-center">勝</th><th class="text-center">敗</th><th class="text-center">BHS</th><th class="text-center">得失差</th><th class="text-center">総得点</th></tr>`
+        : `<tr><th>順位</th><th>選手名</th><th class="text-center">累計pt</th><th class="text-center">勝</th><th class="text-center">分</th><th class="text-center">敗</th><th class="text-center">得失差</th><th class="text-center">総得点</th></tr>`;
 
       document.getElementById('standings-tbody').innerHTML = filtered.map(s => {
-        const actualRank = list.indexOf(s) + 1;
-        const assoc = ASSOCIATIONS[s.player.assoc] || ASSOCIATIONS[0];
+        const rank = list.indexOf(s) + 1;
         const diffStr = `${s.diff >= 0 ? '+' : ''}${s.diff}`;
-        const rowHighlight = viewerHighlightId === s.player.id ? 'bg-amber-100/80' : 'hover:bg-slate-50';
+        const hi = viewerHighlightId === s.player.id ? 'background:#fef9c3;' : '';
         return state.rankingMode === 'bhs'
-          ? `<tr class="${rowHighlight} cursor-pointer transition" onclick="openPlayerDetail('${s.player.id}')"><td class="py-2.5 px-3 font-black text-slate-800">${actualRank}位</td><td class="py-2.5 px-3"><div class="flex items-center gap-1.5"><span class="font-bold text-slate-900 underline decoration-slate-300">${escapeHtml(s.player.name)}</span>${assoc.code > 0 ? `<span class="text-[10px] px-1.5 rounded border ${assoc.color}">${assoc.short}</span>` : ''}</div></td><td class="py-2.5 px-2 text-center text-slate-600">${s.played}</td><td class="py-2.5 px-2 text-center font-black text-teal-700">${s.wins}</td><td class="py-2.5 px-2 text-center text-slate-500">${s.losses}</td><td class="py-2.5 px-2 text-center font-black bg-teal-50/50 text-teal-900">${s.bhs}</td><td class="py-2.5 px-2 text-center font-bold ${s.diff >= 0 ? 'text-emerald-700' : 'text-rose-600'}">${diffStr}</td><td class="py-2.5 px-2 text-center text-slate-700">${s.pf}</td><td class="py-2.5 px-3 text-xs text-slate-500">${escapeHtml(s.tieReason)}</td></tr>`
-          : `<tr class="${rowHighlight} cursor-pointer transition" onclick="openPlayerDetail('${s.player.id}')"><td class="py-2.5 px-3 font-black text-slate-800">${actualRank}位</td><td class="py-2.5 px-3"><div class="flex items-center gap-1.5"><span class="font-bold text-slate-900 underline decoration-slate-300">${escapeHtml(s.player.name)}</span>${assoc.code > 0 ? `<span class="text-[10px] px-1.5 rounded border ${assoc.color}">${assoc.short}</span>` : ''}</div></td><td class="py-2.5 px-2 text-center font-black bg-amber-50/60 text-amber-900">${s.points}</td><td class="py-2.5 px-2 text-center font-bold text-teal-700">${s.wins}</td><td class="py-2.5 px-2 text-center text-slate-500">${s.draws}</td><td class="py-2.5 px-2 text-center text-slate-500">${s.losses}</td><td class="py-2.5 px-2 text-center font-bold ${s.diff >= 0 ? 'text-emerald-700' : 'text-rose-600'}">${diffStr}</td><td class="py-2.5 px-2 text-center text-slate-700">${s.pf}</td><td class="py-2.5 px-3 text-xs text-slate-500">${escapeHtml(s.tieReason)}</td></tr>`;
+          ? `<tr style="${hi}cursor:pointer;" onclick="openPlayerDetail('${s.player.id}')"><td><strong>${rank}位</strong></td><td><strong>${escapeHtml(s.player.name)}</strong></td><td class="text-center">${s.played}</td><td class="text-center"><strong>${s.wins}</strong></td><td class="text-center">${s.losses}</td><td class="text-center"><strong>${s.bhs}</strong></td><td class="text-center">${diffStr}</td><td class="text-center">${s.pf}</td></tr>`
+          : `<tr style="${hi}cursor:pointer;" onclick="openPlayerDetail('${s.player.id}')"><td><strong>${rank}位</strong></td><td><strong>${escapeHtml(s.player.name)}</strong></td><td class="text-center"><strong>${s.points}</strong></td><td class="text-center">${s.wins}</td><td class="text-center">${s.draws}</td><td class="text-center">${s.losses}</td><td class="text-center">${diffStr}</td><td class="text-center">${s.pf}</td></tr>`;
       }).join('');
     }
 
@@ -1605,14 +1428,10 @@
       if (!s) return;
       document.getElementById('detail-player-name').textContent = `${s.player.name} の対戦履歴`;
       const body = document.getElementById('detail-player-body');
-      if (s.history.length === 0) { body.innerHTML = '<div class="text-slate-400">まだ完了した試合はありません。</div>'; }
+      if (s.history.length === 0) { body.innerHTML = '<div style="color:#94a3b8;">まだ完了した試合はありません。</div>'; }
       else {
         const nameOf = id => (state.players.find(p => p.id === id)?.name || '不明');
-        body.innerHTML = s.history.map(h => {
-          const badge = h.outcome === 'win' ? '<span class="bg-teal-600 text-white text-xs font-bold px-2 py-0.5 rounded">勝利</span>'
-            : (h.outcome === 'draw' ? '<span class="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded">引分</span>' : '<span class="bg-slate-400 text-white text-xs font-bold px-2 py-0.5 rounded">敗戦</span>');
-          return `<div class="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1"><div class="flex items-center justify-between"><span class="font-bold text-slate-700">第${h.roundNum}回戦（第${h.courtNum}コート）</span><div class="flex items-center gap-2"><span class="font-black text-base">${h.myScore} - ${h.oppScore}</span>${badge}</div></div><div class="text-xs text-slate-600">味方：${h.allies.map(nameOf).join('・')}</div><div class="text-xs text-slate-600">相手：${h.opponents.map(nameOf).join('・')}</div></div>`;
-        }).join('');
+        body.innerHTML = s.history.map(h => `<div class="info-box"><div style="display:flex;justify-content:space-between;font-weight:800;"><span>第${h.roundNum}回戦（${h.courtNum}コート）</span><span>${h.myScore} - ${h.oppScore}</span></div><div style="font-size:12px;color:#475569;margin-top:4px;">味方：${h.allies.map(nameOf).join('・')} ／ 相手：${h.opponents.map(nameOf).join('・')}</div></div>`).join('');
       }
       document.getElementById('player-detail-modal').classList.remove('hidden');
     }
@@ -1620,8 +1439,8 @@
     function changeDuration(min) {
       state.durationMin = parseInt(min, 10);
       document.getElementById('match-duration').value = state.durationMin;
-      document.getElementById('dur-btn-50').className = state.durationMin === 50 ? 'px-2.5 py-1.5 text-xs font-bold bg-teal-700 text-white' : 'px-2.5 py-1.5 text-xs font-bold bg-white text-slate-600';
-      document.getElementById('dur-btn-45').className = state.durationMin === 45 ? 'px-2.5 py-1.5 text-xs font-bold bg-teal-700 text-white' : 'px-2.5 py-1.5 text-xs font-bold bg-white text-slate-600';
+      document.getElementById('dur-btn-50').className = state.durationMin === 50 ? 'btn btn-teal' : 'btn btn-light';
+      document.getElementById('dur-btn-45').className = state.durationMin === 45 ? 'btn btn-teal' : 'btn btn-light';
       updateConfig(); resetTimer();
     }
 
@@ -1633,20 +1452,17 @@
 
     function toggleTimer() {
       if (timerInterval) {
-        clearInterval(timerInterval);
-        timerInterval = null;
+        clearInterval(timerInterval); timerInterval = null;
         document.getElementById('timer-start-btn').textContent = '▶ 再開';
       } else {
         unlockAudioContext();
         document.getElementById('timer-start-btn').textContent = '⏸ 一時停止';
         timerInterval = setInterval(() => {
           if (timerSeconds > 0) {
-            timerSeconds--;
-            updateTimerDisplay();
+            timerSeconds--; updateTimerDisplay();
             if (timerSeconds === 300 && !warningPlayed) { warningPlayed = true; playWhistle('warning'); }
             if (timerSeconds === 0) {
-              clearInterval(timerInterval);
-              timerInterval = null;
+              clearInterval(timerInterval); timerInterval = null;
               document.getElementById('timer-start-btn').textContent = '▶ スタート';
               playWhistle('end');
             }
@@ -1666,8 +1482,7 @@
       const m = Math.floor(timerSeconds / 60), s = timerSeconds % 60;
       const box = document.getElementById('timer-display-box');
       document.getElementById('timer-display').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-      box.className = timerSeconds === 0 ? 'bg-rose-700 text-white px-4 py-2 rounded-xl text-center min-w-[135px] animate-pulse'
-        : (timerSeconds <= 300 ? 'bg-amber-600 text-white px-4 py-2 rounded-xl text-center min-w-[135px]' : 'bg-slate-900 text-white px-4 py-2 rounded-xl text-center min-w-[135px]');
+      box.className = timerSeconds === 0 ? 'timer-box end' : (timerSeconds <= 300 ? 'timer-box warn' : 'timer-box');
     }
 
     let sharedAudioCtx = null;
@@ -1699,63 +1514,53 @@
       } catch (e) {}
     }
 
-    function decodeCompactState(b64url) {
-      let b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
-      while (b64.length % 4) b64 += '=';
-      const jsonStr = decodeURIComponent(escape(atob(b64)));
-      const arr = JSON.parse(jsonStr);
-      const st = createDefaultState();
-      st.tournamentName = arr[0];
-      st.tournamentDate = arr[1];
-      st.plannedRounds = arr[2];
-      st.durationMin = arr[3];
-      st.rankingMode = arr[4] === 0 ? 'bhs' : 'points';
-      st.ptWin = arr[5];
-      st.ptDraw = arr[6];
-      st.ptLoss = arr[7];
-      st.currentRoundIndex = arr[8] || 0;
-      st.players = (arr[9] || []).map((p, i) => ({ id: 'vp_' + i, name: p[0], assoc: p[1] }));
-      const typeNames = ['3×3', '2×3', '2×2'];
-      st.rounds = (arr[10] || []).map((r, rIdx) => ({
-        roundNum: rIdx + 1,
-        resting: (r[0] || []).map(idx => 'vp_' + idx),
-        courts: (r[1] || []).map((c, cIdx) => ({
-          courtNum: cIdx + 1,
-          type: typeNames[c[0]] || '2×2',
-          red: (c[1] || []).map(idx => 'vp_' + idx),
-          blue: (c[2] || []).map(idx => 'vp_' + idx),
-          scoreRed: (c[3] === -1 || c[3] === null || c[3] === undefined) ? null : Number(c[3]),
-          scoreBlue: (c[4] === -1 || c[4] === null || c[4] === undefined) ? null : Number(c[4])
-        }))
-      }));
-      return st;
-    }
-
     function buildShareUrl() {
       return `${window.location.href.split('#')[0]}#room=${encodeURIComponent(state.roomId)}`;
     }
 
     async function openQrModal() {
       if (isViewerMode) return;
-      await syncStateToCloud();
+      if (navigator.onLine) await syncStateToCloud();
       document.getElementById('qr-modal-title').textContent = state.tournamentName;
       const box = document.getElementById('qrcode-box');
       box.innerHTML = '';
 
-      const shareUrl = buildShareUrl();
-      new QRCode(box, {
-        text: shareUrl,
-        width: 176,
-        height: 176,
-        colorDark: '#0f172a',
-        colorLight: '#ffffff',
-        correctLevel: QRCode.CorrectLevel.M
-      });
+      if (typeof QRCode === 'function') {
+        new QRCode(box, {
+          text: buildShareUrl(),
+          width: 176,
+          height: 176,
+          colorDark: '#0f172a',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M
+        });
+        setTimeout(() => {
+          const canvas = box.querySelector('canvas');
+          const img = box.querySelector('img');
+          if (img && img.src) {
+            if (canvas) canvas.remove();
+          } else if (canvas) {
+            if (img) img.remove();
+            canvas.style.display = 'block';
+            canvas.style.width = '176px';
+            canvas.style.height = '176px';
+          }
+        }, 40);
+      } else {
+        box.innerHTML = '<div style="font-size:12px;color:#64748b;">QRライブラリ未読込（URLコピーをご利用ください）</div>';
+      }
       document.getElementById('qr-modal').classList.remove('hidden');
     }
 
     function closeQrModal() { document.getElementById('qr-modal').classList.add('hidden'); }
-    function copyShareUrl() { navigator.clipboard.writeText(buildShareUrl()).then(() => alert('閲覧専用URLをコピーしました！')); }
+    function copyShareUrl() {
+      const url = buildShareUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => alert('閲覧専用URLをコピーしました！')).catch(() => prompt('URLをコピーしてください:', url));
+      } else {
+        prompt('URLをコピーしてください:', url);
+      }
+    }
 
     function enterViewerMode(targetTab) {
       applyViewerShell();
@@ -1763,11 +1568,8 @@
       document.getElementById('viewer-date-badge').textContent = `開催日: ${state.tournamentDate || ''} ／ 出場: ${state.players.length}名`;
       const selectEl = document.getElementById('viewer-player-select');
       const prevHighlight = viewerHighlightId;
-      selectEl.innerHTML =
-        `<option value="">ハイライト表示を選択...</option>` +
-        state.players.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
+      selectEl.innerHTML = `<option value="">ハイライト表示を選択...</option>` + state.players.map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
       if (prevHighlight) selectEl.value = prevHighlight;
-
       switchViewerTab(targetTab || 'matches');
     }
 
@@ -1775,15 +1577,8 @@
       if (!isViewerMode) return;
       document.getElementById('tab-matches').classList.toggle('hidden', tabName !== 'matches');
       document.getElementById('tab-standings').classList.toggle('hidden', tabName !== 'standings');
-
-      document.getElementById('vtab-matches').className = tabName === 'matches'
-        ? 'flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-black bg-amber-400 text-slate-950 shadow'
-        : 'flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold bg-white/15 text-white hover:bg-white/25';
-
-      document.getElementById('vtab-standings').className = tabName === 'standings'
-        ? 'flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-black bg-amber-400 text-slate-950 shadow'
-        : 'flex-1 sm:flex-none px-4 py-2 rounded-lg text-xs md:text-sm font-bold bg-white/15 text-white hover:bg-white/25';
-
+      document.getElementById('vtab-matches').className = tabName === 'matches' ? 'btn btn-amber' : 'btn btn-ghost-white';
+      document.getElementById('vtab-standings').className = tabName === 'standings' ? 'btn btn-amber' : 'btn btn-ghost-white';
       if (tabName === 'matches') renderMatches();
       if (tabName === 'standings') renderStandings();
     }
@@ -1792,10 +1587,10 @@
 
     function exportCsv() {
       const list = computeStandings();
-      const headers = state.rankingMode === 'bhs' ? ['順位', '選手名', '協会', '試合数', '勝', '敗', 'BHS', '得失点差', '総得点', '備考'] : ['順位', '選手名', '協会', '累計ポイント', '勝', '分', '敗', '得失点差', '総得点', '備考'];
+      const headers = state.rankingMode === 'bhs' ? ['順位', '選手名', '協会', '試合数', '勝', '敗', 'BHS', '得失点差', '総得点'] : ['順位', '選手名', '協会', '累計ポイント', '勝', '分', '敗', '得失点差', '総得点'];
       const rows = list.map((s, idx) => {
         const assocName = (ASSOCIATIONS[s.player.assoc] || ASSOCIATIONS[0]).name;
-        return state.rankingMode === 'bhs' ? [idx + 1, s.player.name, assocName, s.played, s.wins, s.losses, s.bhs, s.diff, s.pf, s.tieReason] : [idx + 1, s.player.name, assocName, s.points, s.wins, s.draws, s.losses, s.diff, s.pf, s.tieReason];
+        return state.rankingMode === 'bhs' ? [idx + 1, s.player.name, assocName, s.played, s.wins, s.losses, s.bhs, s.diff, s.pf] : [idx + 1, s.player.name, assocName, s.points, s.wins, s.draws, s.losses, s.diff, s.pf];
       });
       const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
       const a = document.createElement('a');
